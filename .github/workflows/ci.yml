@@ -22,5 +22,7 @@ jobs:
         run: chmod +x ./node_modules/.bin/jest
       - name: Run tests
         run: npm test
+      - name: Ensure nest is executable
+        run: chmod +x ./node_modules/.bin/nest
       - name: Build project
         run: npm run build
