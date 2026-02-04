@@ -18,6 +18,8 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm install
+      - name: Ensure jest is executable
+        run: chmod +x ./node_modules/.bin/jest
       - name: Run tests
         run: npm test
       - name: Build project
