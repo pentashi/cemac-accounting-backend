@@ -1,10 +1,12 @@
 export declare class User {
     id: number;
-    username: string;
-    email: string;
-    password: string;
-    role: string;
-    isActive: boolean;
-    resetPasswordToken?: string;
-    resetPasswordExpires?: number;
+    raisonSociale: string;
+    emailProfessionnel: string;
+    telephone: string;
+    motDePasse: string;
+    verificationCode?: string;
+    verificationCodeExpires?: number;
+    isVerified: boolean;
+    resetCode?: string;
+    resetCodeExpires?: number;
 }

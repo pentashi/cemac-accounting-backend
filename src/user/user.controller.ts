@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Req, Put } from '@nestjs/common';
 import { UserService } from './user.service';
+import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
@@ -31,7 +32,7 @@ export class UserController {
 
   @Patch(':id')
   @Roles('admin')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  update(@Param('id') id: string, @Body() updateUserDto: Partial<User>) {
     return this.userService.update(Number(id), updateUserDto);
   }
 
@@ -50,7 +51,7 @@ export class UserController {
 
   @Put('profile')
   @Roles('admin', 'user')
-  updateProfile(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
+  updateProfile(@Req() req: any, @Body() updateUserDto: Partial<User>) {
     return this.userService.update(req.user.id, updateUserDto);
   }
 

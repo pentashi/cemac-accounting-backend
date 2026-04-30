@@ -23,32 +23,47 @@ let AuthController = class AuthController {
         this.authService = authService;
     }
     async login(body) {
-        const user = await this.authService.validateUser(body.username, body.password);
+        const user = await this.authService.validateUser(body.emailProfessionnel, body.motDePasse);
         if (!user) {
-            return { error: 'Invalid credentials' };
+            return { error: 'Identifiants invalides' };
         }
         return this.authService.login(user);
     }
     async register(body) {
-        return this.authService.register(body.username, body.password, body.role);
+        return this.authService.register(body.raisonSociale, body.emailProfessionnel, body.telephone, body.motDePasse, body.confirmerMotDePasse);
     }
     async getProfile(req) {
         return req.user;
+    }
+    async envoyerCodeVerification(body) {
+        return this.authService.envoyerCodeVerification(body);
+    }
+    async verifierCode(body) {
+        return this.authService.verifierCode(body.emailProfessionnel, body.code);
+    }
+    async demanderResetMdp(body) {
+        return this.authService.demanderResetMdp(body);
+    }
+    async resetMdp(body) {
+        return this.authService.resetMdp(body.emailProfessionnel, body.code, body.nouveauMotDePasse);
+    }
+    async loginGoogle(body) {
+        return this.authService.loginWithGoogle(body.googleToken);
     }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
-    (0, swagger_1.ApiOperation)({ summary: 'User login' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'User logged in' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Connexion utilisateur' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Utilisateur connecté' }),
     (0, swagger_1.ApiBody)({
         schema: {
             type: 'object',
             properties: {
-                username: { type: 'string', example: 'johndoe' },
-                password: { type: 'string', example: 'StrongP@ssw0rd' },
+                emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
+                motDePasse: { type: 'string', example: 'StrongP@ssw0rd' },
             },
-            required: ['username', 'password'],
+            required: ['emailProfessionnel', 'motDePasse'],
         },
     }),
     __param(0, (0, common_1.Body)()),
@@ -58,17 +73,19 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('register'),
-    (0, swagger_1.ApiOperation)({ summary: 'User registration' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'User registered' }),
+    (0, swagger_1.ApiOperation)({ summary: "Inscription d'un utilisateur" }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Utilisateur inscrit' }),
     (0, swagger_1.ApiBody)({
         schema: {
             type: 'object',
             properties: {
-                username: { type: 'string', example: 'johndoe' },
-                password: { type: 'string', example: 'StrongP@ssw0rd' },
-                role: { type: 'string', example: 'admin' },
+                raisonSociale: { type: 'string', example: 'Société ABC' },
+                emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
+                telephone: { type: 'string', example: '+33612345678' },
+                motDePasse: { type: 'string', example: 'StrongP@ssw0rd' },
+                confirmerMotDePasse: { type: 'string', example: 'StrongP@ssw0rd' },
             },
-            required: ['username', 'password'],
+            required: ['raisonSociale', 'emailProfessionnel', 'telephone', 'motDePasse', 'confirmerMotDePasse'],
         },
     }),
     __param(0, (0, common_1.Body)()),
@@ -86,6 +103,98 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Post)('envoyer-code-verification'),
+    (0, swagger_1.ApiOperation)({ summary: 'Envoyer un code de vérification par email ou WhatsApp' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
+                telephone: { type: 'string', example: '+33612345678' },
+                canal: { type: 'string', enum: ['email', 'whatsapp'], example: 'email' },
+            },
+            required: ['canal'],
+        },
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "envoyerCodeVerification", null);
+__decorate([
+    (0, common_1.Post)('verifier-code'),
+    (0, swagger_1.ApiOperation)({ summary: 'Vérifier le code de vérification' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
+                code: { type: 'string', example: '123456' },
+            },
+            required: ['emailProfessionnel', 'code'],
+        },
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verifierCode", null);
+__decorate([
+    (0, common_1.Post)('demander-reset-mdp'),
+    (0, swagger_1.ApiOperation)({ summary: 'Demander un code de réinitialisation du mot de passe' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
+                telephone: { type: 'string', example: '+33612345678' },
+                canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
+            },
+            required: ['canal'],
+        },
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "demanderResetMdp", null);
+__decorate([
+    (0, common_1.Post)('reset-mdp'),
+    (0, swagger_1.ApiOperation)({ summary: 'Réinitialiser le mot de passe avec code' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
+                code: { type: 'string', example: '123456' },
+                nouveauMotDePasse: { type: 'string', example: 'NouveauP@ssw0rd' },
+            },
+            required: ['emailProfessionnel', 'code', 'nouveauMotDePasse'],
+        },
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resetMdp", null);
+__decorate([
+    (0, common_1.Post)('login-google'),
+    (0, swagger_1.ApiOperation)({ summary: 'Connexion avec Google' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                googleToken: { type: 'string', example: 'token_google' },
+            },
+            required: ['googleToken'],
+        },
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "loginGoogle", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),

@@ -13,13 +13,15 @@ exports.User = void 0;
 const typeorm_1 = require("typeorm");
 let User = class User {
     id;
-    username;
-    email;
-    password;
-    role;
-    isActive;
-    resetPasswordToken;
-    resetPasswordExpires;
+    raisonSociale;
+    emailProfessionnel;
+    telephone;
+    motDePasse;
+    verificationCode;
+    verificationCodeExpires;
+    isVerified;
+    resetCode;
+    resetCodeExpires;
 };
 exports.User = User;
 __decorate([
@@ -27,33 +29,41 @@ __decorate([
     __metadata("design:type", Number)
 ], User.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], User.prototype, "username", void 0);
+], User.prototype, "raisonSociale", void 0);
 __decorate([
     (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
-], User.prototype, "email", void 0);
+], User.prototype, "emailProfessionnel", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], User.prototype, "password", void 0);
+], User.prototype, "telephone", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: 'user' }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], User.prototype, "role", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ default: true }),
-    __metadata("design:type", Boolean)
-], User.prototype, "isActive", void 0);
+], User.prototype, "motDePasse", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
-], User.prototype, "resetPasswordToken", void 0);
+], User.prototype, "verificationCode", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true, type: 'bigint' }),
     __metadata("design:type", Number)
-], User.prototype, "resetPasswordExpires", void 0);
+], User.prototype, "verificationCodeExpires", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "isVerified", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "resetCode", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true, type: 'bigint' }),
+    __metadata("design:type", Number)
+], User.prototype, "resetCodeExpires", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)()
 ], User);

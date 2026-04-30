@@ -12,26 +12,56 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateUserDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 class CreateUserDto {
-    username;
-    email;
-    password;
-    role;
+    raisonSociale;
+    emailProfessionnel;
+    telephone;
+    motDePasse;
+    confirmerMotDePasse;
+    verificationCode;
+    verificationCodeExpires;
+    isVerified;
+    resetCode;
+    resetCodeExpires;
 }
 exports.CreateUserDto = CreateUserDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Unique username for the user', example: 'johndoe' }),
+    (0, swagger_1.ApiProperty)({ description: 'Raison sociale', example: 'Société ABC' }),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "username", void 0);
+], CreateUserDto.prototype, "raisonSociale", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User email address', example: 'john.doe@example.com' }),
+    (0, swagger_1.ApiProperty)({ description: 'Email professionnel', example: 'contact@abc.com' }),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "email", void 0);
+], CreateUserDto.prototype, "emailProfessionnel", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User password (min 8 chars)', example: 'StrongP@ssw0rd' }),
+    (0, swagger_1.ApiProperty)({ description: 'Téléphone', example: '+33612345678' }),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "password", void 0);
+], CreateUserDto.prototype, "telephone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User role (optional)', example: 'admin', required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Mot de passe (min 8 caractères)', example: 'StrongP@ssw0rd' }),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "role", void 0);
+], CreateUserDto.prototype, "motDePasse", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Confirmer le mot de passe', example: 'StrongP@ssw0rd' }),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "confirmerMotDePasse", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Code de vérification', example: '123456', required: false }),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "verificationCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Expiration du code de vérification (timestamp)', example: 1714500000000, required: false }),
+    __metadata("design:type", Number)
+], CreateUserDto.prototype, "verificationCodeExpires", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Utilisateur vérifié', example: false, required: false }),
+    __metadata("design:type", Boolean)
+], CreateUserDto.prototype, "isVerified", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Code de réinitialisation', example: '654321', required: false }),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "resetCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Expiration du code de réinitialisation (timestamp)', example: 1714500000000, required: false }),
+    __metadata("design:type", Number)
+], CreateUserDto.prototype, "resetCodeExpires", void 0);
 //# sourceMappingURL=create-user.dto.js.map

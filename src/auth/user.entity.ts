@@ -5,12 +5,15 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column()
+  raisonSociale: string;
+
   @Column({ unique: true })
-  username: string;
+  emailProfessionnel: string;
 
   @Column()
-  password: string;
+  telephone: string;
 
-  @Column({ default: 'user' })
-  role: string; // e.g., 'admin', 'user', 'accountant'
+  @Column()
+  motDePasse: string;
 }

@@ -1,6 +1,7 @@
 export declare class User {
     id: number;
-    username: string;
-    password: string;
-    role: string;
+    raisonSociale: string;
+    emailProfessionnel: string;
+    telephone: string;
+    motDePasse: string;
 }

@@ -5,24 +5,30 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
-  username: string;
+  @Column()
+  raisonSociale: string;
 
   @Column({ unique: true })
-  email: string;
+  emailProfessionnel: string;
 
   @Column()
-  password: string;
+  telephone: string;
 
-  @Column({ default: 'user' })
-  role: string;
-
-  @Column({ default: true })
-  isActive: boolean;
+  @Column()
+  motDePasse: string;
 
   @Column({ nullable: true })
-  resetPasswordToken?: string;
+  verificationCode?: string;
 
   @Column({ nullable: true, type: 'bigint' })
-  resetPasswordExpires?: number;
+  verificationCodeExpires?: number;
+
+  @Column({ default: false })
+  isVerified: boolean;
+
+  @Column({ nullable: true })
+  resetCode?: string;
+
+  @Column({ nullable: true, type: 'bigint' })
+  resetCodeExpires?: number;
 }

@@ -1,6 +1,12 @@
 export declare class CreateUserDto {
-    username: string;
-    email: string;
-    password: string;
-    role?: string;
+    raisonSociale: string;
+    emailProfessionnel: string;
+    telephone: string;
+    motDePasse: string;
+    confirmerMotDePasse: string;
+    verificationCode?: string;
+    verificationCodeExpires?: number;
+    isVerified?: boolean;
+    resetCode?: string;
+    resetCodeExpires?: number;
 }

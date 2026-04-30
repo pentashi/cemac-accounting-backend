@@ -64,10 +64,15 @@ let UserService = class UserService {
         this.notificationService = notificationService;
     }
     async create(createUserDto) {
-        const user = this.userRepository.create(createUserDto);
+        const user = this.userRepository.create({
+            raisonSociale: createUserDto.raisonSociale,
+            emailProfessionnel: createUserDto.emailProfessionnel,
+            telephone: createUserDto.telephone,
+            motDePasse: createUserDto.motDePasse,
+        });
         const saved = await this.userRepository.save(user);
-        await this.auditLogService.log(saved.id, 'create_user', 'User', String(saved.id), { username: saved.username });
-        await this.notificationService.create(saved.id, 'user_created', `Bienvenue ${saved.username}, votre compte a été créé.`);
+        await this.auditLogService.log(saved.id, 'create_user', 'User', String(saved.id), { raisonSociale: saved.raisonSociale });
+        await this.notificationService.create(saved.id, 'user_created', `Bienvenue ${saved.raisonSociale}, votre compte a été créé.`);
         return saved;
     }
     findAll() {
@@ -77,9 +82,26 @@ let UserService = class UserService {
         return this.userRepository.findOneBy({ id });
     }
     async update(id, updateUserDto) {
-        await this.userRepository.update(id, updateUserDto);
+        const allowedFields = [
+            'raisonSociale',
+            'emailProfessionnel',
+            'telephone',
+            'motDePasse',
+            'isVerified',
+            'verificationCode',
+            'verificationCodeExpires',
+            'resetCode',
+            'resetCodeExpires',
+        ];
+        const filteredUpdate = {};
+        for (const key of allowedFields) {
+            if (key in updateUserDto) {
+                filteredUpdate[key] = updateUserDto[key];
+            }
+        }
+        await this.userRepository.update(id, filteredUpdate);
         const updated = await this.userRepository.findOneBy({ id });
-        await this.auditLogService.log(id, 'update_user', 'User', String(id), { updateUserDto });
+        await this.auditLogService.log(id, 'update_user', 'User', String(id), { updateUserDto: filteredUpdate });
         return updated;
     }
     async remove(id) {
@@ -88,28 +110,28 @@ let UserService = class UserService {
         return result;
     }
     async requestPasswordReset(dto) {
-        const user = await this.userRepository.findOneBy({ email: dto.email });
+        const user = await this.userRepository.findOneBy({ emailProfessionnel: dto.email });
         if (!user)
             return null;
-        user.resetPasswordToken = crypto.randomBytes(32).toString('hex');
-        user.resetPasswordExpires = Date.now() + 3600 * 1000;
+        user.resetCode = crypto.randomBytes(6).toString('hex');
+        user.resetCodeExpires = Date.now() + 3600 * 1000;
         await this.userRepository.save(user);
-        await (0, email_util_1.sendPasswordResetEmail)(user.email, user.resetPasswordToken);
+        await (0, email_util_1.sendPasswordResetEmail)(user.emailProfessionnel, user.resetCode);
         await this.auditLogService.log(user.id, 'request_password_reset', 'User', String(user.id));
         await this.notificationService.create(user.id, 'password_reset_requested', `Une demande de réinitialisation de mot de passe a été effectuée pour votre compte.`);
-        return { email: user.email, message: 'Password reset email sent.' };
+        return { emailProfessionnel: user.emailProfessionnel, message: 'Password reset code sent.' };
     }
     async resetPassword(dto) {
-        const user = await this.userRepository.findOneBy({ resetPasswordToken: dto.token });
-        if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < Date.now()) {
+        const user = await this.userRepository.findOneBy({ resetCode: dto.token });
+        if (!user || !user.resetCodeExpires || user.resetCodeExpires < Date.now()) {
             return null;
         }
-        user.password = dto.newPassword;
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpires = undefined;
+        user.motDePasse = dto.newPassword;
+        user.resetCode = undefined;
+        user.resetCodeExpires = undefined;
         await this.userRepository.save(user);
         await this.auditLogService.log(user.id, 'reset_password', 'User', String(user.id));
-        return { email: user.email };
+        return { emailProfessionnel: user.emailProfessionnel };
     }
 };
 exports.UserService = UserService;
