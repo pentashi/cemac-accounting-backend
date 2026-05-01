@@ -12,31 +12,51 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateUserDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 class UpdateUserDto {
-    username;
-    email;
-    password;
-    role;
-    isActive;
+    raisonSociale;
+    emailProfessionnel;
+    telephone;
+    motDePasse;
+    isVerified;
+    verificationCode;
+    verificationCodeExpires;
+    resetCode;
+    resetCodeExpires;
 }
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Unique username for the user', example: 'johndoe', required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Raison sociale', example: 'Société ABC', required: false }),
     __metadata("design:type", String)
-], UpdateUserDto.prototype, "username", void 0);
+], UpdateUserDto.prototype, "raisonSociale", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User email address', example: 'john.doe@example.com', required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Email professionnel', example: 'contact@abc.com', required: false }),
     __metadata("design:type", String)
-], UpdateUserDto.prototype, "email", void 0);
+], UpdateUserDto.prototype, "emailProfessionnel", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User password (min 8 chars)', example: 'StrongP@ssw0rd', required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Téléphone', example: '+33612345678', required: false }),
     __metadata("design:type", String)
-], UpdateUserDto.prototype, "password", void 0);
+], UpdateUserDto.prototype, "telephone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User role', example: 'admin', required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Mot de passe (min 8 caractères)', example: 'StrongP@ssw0rd', required: false }),
     __metadata("design:type", String)
-], UpdateUserDto.prototype, "role", void 0);
+], UpdateUserDto.prototype, "motDePasse", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Is the user active?', example: true, required: false }),
+    (0, swagger_1.ApiProperty)({ description: 'Utilisateur vérifié', example: false, required: false }),
     __metadata("design:type", Boolean)
-], UpdateUserDto.prototype, "isActive", void 0);
+], UpdateUserDto.prototype, "isVerified", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Code de vérification', example: '123456', required: false }),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "verificationCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Expiration du code de vérification (timestamp)', example: 1714500000000, required: false }),
+    __metadata("design:type", Number)
+], UpdateUserDto.prototype, "verificationCodeExpires", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Code de réinitialisation', example: '654321', required: false }),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "resetCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Expiration du code de réinitialisation (timestamp)', example: 1714500000000, required: false }),
+    __metadata("design:type", Number)
+], UpdateUserDto.prototype, "resetCodeExpires", void 0);
 //# sourceMappingURL=update-user.dto.js.map

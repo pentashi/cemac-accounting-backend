@@ -1,4 +1,5 @@
 import { AuthService } from './auth.service';
+import { CreateUserDto } from '../user/dto/create-user.dto';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
@@ -10,13 +11,7 @@ export declare class AuthController {
     } | {
         error: string;
     }>;
-    register(body: {
-        raisonSociale: string;
-        emailProfessionnel: string;
-        telephone: string;
-        motDePasse: string;
-        confirmerMotDePasse: string;
-    }): Promise<import("../user/user.entity").User>;
+    register(createUserDto: CreateUserDto): Promise<import("../user/user.entity").User>;
     getProfile(req: any): Promise<any>;
     envoyerCodeVerification(body: {
         emailProfessionnel?: string;

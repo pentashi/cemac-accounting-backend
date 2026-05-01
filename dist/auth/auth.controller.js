@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const jwt_auth_guard_1 = require("./jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
+const create_user_dto_1 = require("../user/dto/create-user.dto");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -29,8 +30,8 @@ let AuthController = class AuthController {
         }
         return this.authService.login(user);
     }
-    async register(body) {
-        return this.authService.register(body.raisonSociale, body.emailProfessionnel, body.telephone, body.motDePasse, body.confirmerMotDePasse);
+    async register(createUserDto) {
+        return this.authService.register(createUserDto.raisonSociale, createUserDto.emailProfessionnel, createUserDto.telephone, createUserDto.motDePasse, createUserDto.confirmerMotDePasse);
     }
     async getProfile(req) {
         return req.user;
@@ -75,22 +76,10 @@ __decorate([
     (0, common_1.Post)('register'),
     (0, swagger_1.ApiOperation)({ summary: "Inscription d'un utilisateur" }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Utilisateur inscrit' }),
-    (0, swagger_1.ApiBody)({
-        schema: {
-            type: 'object',
-            properties: {
-                raisonSociale: { type: 'string', example: 'Société ABC' },
-                emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
-                telephone: { type: 'string', example: '+33612345678' },
-                motDePasse: { type: 'string', example: 'StrongP@ssw0rd' },
-                confirmerMotDePasse: { type: 'string', example: 'StrongP@ssw0rd' },
-            },
-            required: ['raisonSociale', 'emailProfessionnel', 'telephone', 'motDePasse', 'confirmerMotDePasse'],
-        },
-    }),
+    (0, swagger_1.ApiBody)({ type: create_user_dto_1.CreateUserDto }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
