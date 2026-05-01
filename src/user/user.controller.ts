@@ -6,6 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('users')
 @UseGuards(RolesGuard)
@@ -14,6 +15,7 @@ export class UserController {
 
   @Post()
   @Roles('admin')
+  @ApiBody({ type: CreateUserDto })
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
@@ -32,7 +34,8 @@ export class UserController {
 
   @Patch(':id')
   @Roles('admin')
-  update(@Param('id') id: string, @Body() updateUserDto: Partial<User>) {
+  @ApiBody({ type: UpdateUserDto })
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(Number(id), updateUserDto);
   }
 
@@ -51,16 +54,19 @@ export class UserController {
 
   @Put('profile')
   @Roles('admin', 'user')
-  updateProfile(@Req() req: any, @Body() updateUserDto: Partial<User>) {
+  @ApiBody({ type: UpdateUserDto })
+  updateProfile(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(req.user.id, updateUserDto);
   }
 
   @Post('request-password-reset')
+  @ApiBody({ type: RequestPasswordResetDto })
   requestPasswordReset(@Body() dto: RequestPasswordResetDto) {
     return this.userService.requestPasswordReset(dto);
   }
 
   @Post('reset-password')
+  @ApiBody({ type: ResetPasswordDto })
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.userService.resetPassword(dto);
   }

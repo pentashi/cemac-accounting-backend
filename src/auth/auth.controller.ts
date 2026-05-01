@@ -3,6 +3,7 @@ import { Controller, Post, Body, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ApiBody, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CreateUserDto } from '../user/dto/create-user.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -21,7 +22,7 @@ export class AuthController {
       },
       required: ['emailProfessionnel', 'motDePasse'],
     },
-  })
+  }) // Login does not have a DTO, so keep schema for now
   async login(@Body() body: { emailProfessionnel: string; motDePasse: string }) {
     const user = await this.authService.validateUser(body.emailProfessionnel, body.motDePasse);
     if (!user) {
@@ -33,21 +34,15 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: "Inscription d'un utilisateur" })
   @ApiResponse({ status: 201, description: 'Utilisateur inscrit' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        raisonSociale: { type: 'string', example: 'Société ABC' },
-        emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
-        telephone: { type: 'string', example: '+33612345678' },
-        motDePasse: { type: 'string', example: 'StrongP@ssw0rd' },
-        confirmerMotDePasse: { type: 'string', example: 'StrongP@ssw0rd' },
-      },
-      required: ['raisonSociale', 'emailProfessionnel', 'telephone', 'motDePasse', 'confirmerMotDePasse'],
-    },
-  })
-  async register(@Body() body: { raisonSociale: string; emailProfessionnel: string; telephone: string; motDePasse: string; confirmerMotDePasse: string }) {
-    return this.authService.register(body.raisonSociale, body.emailProfessionnel, body.telephone, body.motDePasse, body.confirmerMotDePasse);
+  @ApiBody({ type: CreateUserDto })
+  async register(@Body() createUserDto: CreateUserDto) {
+    return this.authService.register(
+      createUserDto.raisonSociale,
+      createUserDto.emailProfessionnel,
+      createUserDto.telephone,
+      createUserDto.motDePasse,
+      createUserDto.confirmerMotDePasse
+    );
   }
 
   @Post('profile')
