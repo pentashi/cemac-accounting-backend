@@ -43,12 +43,12 @@ describe('UserService', () => {
   });
 
   it('should update a user', async () => {
-    const updateUserDto = { raisonSociale: 'updateduser' };
+    const updateUserDto = { raisonSociale: 'Updated SARL' };
     service['userRepository'].update = jest.fn().mockResolvedValue({});
-    service['userRepository'].findOneBy = jest.fn().mockResolvedValue({ id: 1, raisonSociale: 'updateduser' });
+    service['userRepository'].findOneBy = jest.fn().mockResolvedValue({ id: 1, raisonSociale: 'Updated SARL' });
     service['auditLogService'].log = jest.fn();
     const result = await service.update(1, updateUserDto);
-    expect(result).toMatchObject({ id: 1, raisonSociale: 'updateduser' });
+    expect(result).toMatchObject({ id: 1, raisonSociale: 'Updated SARL' });
     expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'update_user', 'User', '1', { updateUserDto });
   });
 
