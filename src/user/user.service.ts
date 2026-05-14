@@ -3,10 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import {
-  RequestPasswordResetDto,
-  ResetPasswordDto,
-} from './dto/password-reset.dto';
+import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
 import * as crypto from 'crypto';
 import { sendPasswordResetEmail } from './email.util';
 import { AuditLogService } from '../audit/audit-log.service';
@@ -29,17 +26,11 @@ export class UserService {
       motDePasse: createUserDto.motDePasse,
     });
     const saved = await this.userRepository.save(user);
-    await this.auditLogService.log(
-      saved.id,
-      'create_user',
-      'User',
-      String(saved.id),
-      { raisonSociale: saved.raisonSociale },
-    );
+    await this.auditLogService.log(saved.id, 'create_user', 'User', String(saved.id), { raisonSociale: saved.raisonSociale });
     await this.notificationService.create(
       saved.id,
       'user_created',
-      `Bienvenue ${saved.raisonSociale}, votre compte a été créé.`,
+      `Bienvenue ${saved.raisonSociale}, votre compte a été créé.`
     );
     return saved;
   }
@@ -73,9 +64,7 @@ export class UserService {
     }
     await this.userRepository.update(id, filteredUpdate);
     const updated = await this.userRepository.findOneBy({ id });
-    await this.auditLogService.log(id, 'update_user', 'User', String(id), {
-      updateUserDto: filteredUpdate,
-    });
+    await this.auditLogService.log(id, 'update_user', 'User', String(id), { updateUserDto: filteredUpdate });
     return updated;
   }
 
@@ -86,29 +75,19 @@ export class UserService {
   }
 
   async requestPasswordReset(dto: RequestPasswordResetDto) {
-    const user = await this.userRepository.findOneBy({
-      emailProfessionnel: dto.email,
-    });
+    const user = await this.userRepository.findOneBy({ emailProfessionnel: dto.email });
     if (!user) return null;
     user.resetCode = crypto.randomBytes(6).toString('hex');
     user.resetCodeExpires = Date.now() + 3600 * 1000; // 1 hour
     await this.userRepository.save(user);
     await sendPasswordResetEmail(user.emailProfessionnel, user.resetCode);
-    await this.auditLogService.log(
-      user.id,
-      'request_password_reset',
-      'User',
-      String(user.id),
-    );
+    await this.auditLogService.log(user.id, 'request_password_reset', 'User', String(user.id));
     await this.notificationService.create(
       user.id,
       'password_reset_requested',
-      `Une demande de réinitialisation de mot de passe a été effectuée pour votre compte.`,
+      `Une demande de réinitialisation de mot de passe a été effectuée pour votre compte.`
     );
-    return {
-      emailProfessionnel: user.emailProfessionnel,
-      message: 'Password reset code sent.',
-    };
+    return { emailProfessionnel: user.emailProfessionnel, message: 'Password reset code sent.' };
   }
 
   async resetPassword(dto: ResetPasswordDto) {
@@ -120,12 +99,7 @@ export class UserService {
     user.resetCode = undefined;
     user.resetCodeExpires = undefined;
     await this.userRepository.save(user);
-    await this.auditLogService.log(
-      user.id,
-      'reset_password',
-      'User',
-      String(user.id),
-    );
+    await this.auditLogService.log(user.id, 'reset_password', 'User', String(user.id));
     return { emailProfessionnel: user.emailProfessionnel };
   }
 }

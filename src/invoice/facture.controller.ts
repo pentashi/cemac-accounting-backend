@@ -1,29 +1,12 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Param,
-  Query,
-  Res,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiQuery,
-  ApiParam,
-  ApiBody,
-} from '@nestjs/swagger';
+import { Controller, Post, Body, Get, Param, Query, Res, UseGuards, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FactureService } from './facture.service';
 import { FactureCalculDto } from './facture.dto';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import type { Response } from 'express';
 import { AuditLogService } from '../audit/audit-log.service';
+
 
 @ApiTags('Factures')
 @ApiBearerAuth()
@@ -47,29 +30,18 @@ export class FactureController {
   @Roles('admin', 'user')
   @ApiOperation({ summary: 'Exporter une facture' })
   @ApiParam({ name: 'id', type: 'string', description: 'ID de la facture' })
-  @ApiQuery({
-    name: 'format',
-    enum: ['pdf', 'excel', 'csv'],
-    required: false,
-    description: 'Format du fichier exporté',
-  })
+  @ApiQuery({ name: 'format', enum: ['pdf', 'excel', 'csv'], required: false, description: 'Format du fichier exporté' })
   @ApiResponse({ status: 200, description: 'Fichier exporté.' })
   async exportInvoice(
     @Param('id') id: string,
     @Query('format') format: 'pdf' | 'excel' | 'csv' = 'pdf',
     @Res() res: Response,
-    @Req() req: any,
+    @Req() req: any
   ) {
-    const { buffer, filename, contentType } =
-      await this.factureService.exportInvoice(Number(id), format);
+    const { buffer, filename, contentType } = await this.factureService.exportInvoice(Number(id), format);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
-    await this.auditLogService.log(
-      req.user?.id || 0,
-      `export_invoice_${format}`,
-      'Facture',
-      id,
-    );
+    await this.auditLogService.log(req.user?.id || 0, `export_invoice_${format}`, 'Facture', id);
     return res.send(buffer);
   }
 }
