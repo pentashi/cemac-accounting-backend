@@ -5,9 +5,10 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { AuditModule } from '../audit/audit.module';
 import { NotificationModule } from '../notification/notification.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), AuditModule, NotificationModule],
+  imports: [TypeOrmModule.forFeature([User]), AuditModule, NotificationModule, AuthModule],
   providers: [UserService],
   controllers: [UserController],
   exports: [UserService],

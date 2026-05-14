@@ -8,7 +8,11 @@ export class RequestPasswordResetDto {
 }
 
 export class ResetPasswordDto {
-  @ApiProperty({ description: 'Password reset token', example: 'abcdef123456' })
+  @ApiProperty({ description: 'Email address tied to the reset code', example: 'john.doe@example.com' })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ description: 'Password reset token', example: '123456' })
   @IsNotEmpty()
   token: string;
 

@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuditLogService } from '../audit/audit-log.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Client, Fournisseur } from './partner.entity';
 import { CreateClientDto, CreateFournisseurDto } from './partner.dto';
 import { parse as csvParse } from 'csv-parse/sync';
-
 import * as PDFDocument from 'pdfkit';
 import * as ExcelJS from 'exceljs';
 import { format as formatCSV } from 'fast-csv';
@@ -20,25 +19,33 @@ export class PartnerService {
     private readonly auditLogService: AuditLogService,
   ) {}
 
-  // Clients
   async createClient(dto: CreateClientDto) {
     const client = this.clientRepo.create(dto);
     const saved = await this.clientRepo.save(client);
     await this.auditLogService.log(saved.id, 'create_client', 'Client', String(saved.id), { name: saved.nom });
     return saved;
   }
+
   findAllClients() {
     return this.clientRepo.find();
+  }
+
+  async findClientById(id: number) {
+    const client = await this.clientRepo.findOneBy({ id });
+    if (!client) {
+      throw new NotFoundException('Client introuvable');
+    }
+    return client;
   }
 
   async exportClients(format: 'pdf' | 'excel' | 'csv', userId: number) {
     const clients = await this.clientRepo.find();
     let buffer: Buffer;
-    let filename = `clients.${format}`;
+    const filename = `clients.${format}`;
     let contentType = 'application/octet-stream';
     if (format === 'pdf') {
       contentType = 'application/pdf';
-        const doc = new (PDFDocument as any)();
+      const doc = new (PDFDocument as any)();
       const chunks: Buffer[] = [];
       doc.text('Liste des clients');
       doc.text('---');
@@ -46,9 +53,8 @@ export class PartnerService {
         doc.text(`${c.nom} | ${c.email} | ${c.telephone} | ${c.adresse} | ${c.numero_contribuable || ''}`);
       });
       doc.end();
-      for await (const chunk of doc) chunks.push(chunk);
-        for await (const chunk of doc) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-        buffer = Buffer.concat(chunks);
+      for await (const chunk of doc) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      buffer = Buffer.concat(chunks);
     } else if (format === 'excel') {
       contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
       const workbook = new ExcelJS.Workbook();
@@ -57,7 +63,7 @@ export class PartnerService {
       clients.forEach(c => {
         sheet.addRow([c.nom, c.email, c.telephone, c.adresse, c.numero_contribuable || '']);
       });
-        buffer = Buffer.from(await workbook.xlsx.writeBuffer());
+      buffer = Buffer.from(await workbook.xlsx.writeBuffer());
     } else if (format === 'csv') {
       contentType = 'text/csv';
       const rows = [
@@ -79,7 +85,6 @@ export class PartnerService {
   }
 
   async importClients(file: Express.Multer.File, userId: number) {
-    // Only CSV supported for simplicity
     const content = file.buffer.toString();
     const records = csvParse(content, { columns: true, skip_empty_lines: true });
     let count = 0;
@@ -101,31 +106,42 @@ export class PartnerService {
 
   async updateClient(id: number, dto: Partial<CreateClientDto>) {
     await this.clientRepo.update(id, dto);
-    const updated = await this.clientRepo.findOneBy({ id });
-    await this.auditLogService.log(id, 'update_client', 'Client', String(id), { update: dto });
-    return updated;
+    return this.findClientById(id).then(async updated => {
+      await this.auditLogService.log(id, 'update_client', 'Client', String(id), { update: dto });
+      return updated;
+    });
   }
 
   async deleteClient(id: number) {
+    const existing = await this.findClientById(id);
     const result = await this.clientRepo.delete(id);
-    await this.auditLogService.log(id, 'delete_client', 'Client', String(id));
+    await this.auditLogService.log(id, 'delete_client', 'Client', String(existing.id));
     return result;
   }
-  // Fournisseurs
+
   async createFournisseur(dto: CreateFournisseurDto) {
     const fournisseur = this.fournisseurRepo.create(dto);
     const saved = await this.fournisseurRepo.save(fournisseur);
     await this.auditLogService.log(saved.id, 'create_fournisseur', 'Fournisseur', String(saved.id), { name: saved.nom });
     return saved;
   }
+
   findAllFournisseurs() {
     return this.fournisseurRepo.find();
+  }
+
+  async findFournisseurById(id: number) {
+    const fournisseur = await this.fournisseurRepo.findOneBy({ id });
+    if (!fournisseur) {
+      throw new NotFoundException('Fournisseur introuvable');
+    }
+    return fournisseur;
   }
 
   async exportFournisseurs(format: 'pdf' | 'excel' | 'csv', userId: number) {
     const fournisseurs = await this.fournisseurRepo.find();
     let buffer: Buffer;
-    let filename = `fournisseurs.${format}`;
+    const filename = `fournisseurs.${format}`;
     let contentType = 'application/octet-stream';
     if (format === 'pdf') {
       contentType = 'application/pdf';
@@ -137,7 +153,7 @@ export class PartnerService {
         doc.text(`${f.nom} | ${f.email} | ${f.telephone} | ${f.adresse} | ${f.numero_contribuable || ''}`);
       });
       doc.end();
-      for await (const chunk of doc) chunks.push(chunk);
+      for await (const chunk of doc) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
       buffer = Buffer.concat(chunks);
     } else if (format === 'excel') {
       contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -169,7 +185,6 @@ export class PartnerService {
   }
 
   async importFournisseurs(file: Express.Multer.File, userId: number) {
-    // Only CSV supported for simplicity
     const content = file.buffer.toString();
     const records = csvParse(content, { columns: true, skip_empty_lines: true });
     let count = 0;
@@ -191,14 +206,16 @@ export class PartnerService {
 
   async updateFournisseur(id: number, dto: Partial<CreateFournisseurDto>) {
     await this.fournisseurRepo.update(id, dto);
-    const updated = await this.fournisseurRepo.findOneBy({ id });
-    await this.auditLogService.log(id, 'update_fournisseur', 'Fournisseur', String(id), { update: dto });
-    return updated;
+    return this.findFournisseurById(id).then(async updated => {
+      await this.auditLogService.log(id, 'update_fournisseur', 'Fournisseur', String(id), { update: dto });
+      return updated;
+    });
   }
 
   async deleteFournisseur(id: number) {
+    const existing = await this.findFournisseurById(id);
     const result = await this.fournisseurRepo.delete(id);
-    await this.auditLogService.log(id, 'delete_fournisseur', 'Fournisseur', String(id));
+    await this.auditLogService.log(id, 'delete_fournisseur', 'Fournisseur', String(existing.id));
     return result;
   }
 }

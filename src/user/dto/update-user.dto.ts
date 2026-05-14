@@ -1,4 +1,3 @@
-
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserDto {
@@ -13,4 +12,7 @@ export class UpdateUserDto {
 
   @ApiProperty({ description: 'Mot de passe (min 8 caractères)', example: 'StrongP@ssw0rd', required: false })
   motDePasse?: string;
+
+  @ApiProperty({ description: 'Rôle', example: 'user', required: false, enum: ['admin', 'user'] })
+  role?: 'admin' | 'user';
 }

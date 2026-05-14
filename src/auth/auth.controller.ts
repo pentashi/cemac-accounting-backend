@@ -1,8 +1,7 @@
-
-import { Controller, Post, Body, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { ApiBody, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 
 @ApiTags('Auth')
@@ -22,11 +21,11 @@ export class AuthController {
       },
       required: ['emailProfessionnel', 'motDePasse'],
     },
-  }) // Login does not have a DTO, so keep schema for now
+  })
   async login(@Body() body: { emailProfessionnel: string; motDePasse: string }) {
     const user = await this.authService.validateUser(body.emailProfessionnel, body.motDePasse);
-    if (!user) {
-      return { error: 'Identifiants invalides' };
+    if (!user || user.error) {
+      return user ?? { error: 'Identifiants invalides' };
     }
     return this.authService.login(user);
   }
@@ -41,7 +40,8 @@ export class AuthController {
       createUserDto.emailProfessionnel,
       createUserDto.telephone,
       createUserDto.motDePasse,
-      createUserDto.confirmerMotDePasse
+      createUserDto.confirmerMotDePasse,
+      createUserDto.role,
     );
   }
 
@@ -54,19 +54,19 @@ export class AuthController {
   }
 
   @Post('envoyer-code-verification')
-  @ApiOperation({ summary: 'Envoyer un code de vérification par email ou WhatsApp' })
+  @ApiOperation({ summary: 'Envoyer un code de vérification par email, SMS ou WhatsApp' })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
         emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
         telephone: { type: 'string', example: '+33612345678' },
-        canal: { type: 'string', enum: ['email', 'whatsapp'], example: 'email' },
+        canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
       },
       required: ['canal'],
     },
   })
-  async envoyerCodeVerification(@Body() body: { emailProfessionnel?: string; telephone?: string; canal: 'email' | 'whatsapp' }) {
+  async envoyerCodeVerification(@Body() body: { emailProfessionnel?: string; telephone?: string; canal: 'email' | 'whatsapp' | 'sms' }) {
     return this.authService.envoyerCodeVerification(body);
   }
 
@@ -77,13 +77,14 @@ export class AuthController {
       type: 'object',
       properties: {
         emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
+        telephone: { type: 'string', example: '+33612345678' },
         code: { type: 'string', example: '123456' },
       },
-      required: ['emailProfessionnel', 'code'],
+      required: ['code'],
     },
   })
-  async verifierCode(@Body() body: { emailProfessionnel: string; code: string }) {
-    return this.authService.verifierCode(body.emailProfessionnel, body.code);
+  async verifierCode(@Body() body: { emailProfessionnel?: string; telephone?: string; code: string }) {
+    return this.authService.verifierCode({ emailProfessionnel: body.emailProfessionnel, telephone: body.telephone }, body.code);
   }
 
   @Post('demander-reset-mdp')
@@ -110,14 +111,16 @@ export class AuthController {
       type: 'object',
       properties: {
         emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
+        telephone: { type: 'string', example: '+33612345678' },
         code: { type: 'string', example: '123456' },
         nouveauMotDePasse: { type: 'string', example: 'NouveauP@ssw0rd' },
+        canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
       },
-      required: ['emailProfessionnel', 'code', 'nouveauMotDePasse'],
+      required: ['code', 'nouveauMotDePasse', 'canal'],
     },
   })
-  async resetMdp(@Body() body: { emailProfessionnel: string; code: string; nouveauMotDePasse: string }) {
-    return this.authService.resetMdp(body.emailProfessionnel, body.code, body.nouveauMotDePasse);
+  async resetMdp(@Body() body: { emailProfessionnel?: string; telephone?: string; code: string; nouveauMotDePasse: string; canal: 'email' | 'whatsapp' | 'sms' }) {
+    return this.authService.resetMdp(body);
   }
 
   @Post('login-google')

@@ -1,4 +1,3 @@
-
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
@@ -16,4 +15,7 @@ export class CreateUserDto {
 
   @ApiProperty({ description: 'Confirmer le mot de passe', example: 'StrongP@ssw0rd' })
   confirmerMotDePasse: string;
+
+  @ApiProperty({ description: 'Rôle', example: 'user', required: false, enum: ['admin', 'user'] })
+  role?: 'admin' | 'user';
 }

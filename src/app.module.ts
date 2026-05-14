@@ -17,6 +17,7 @@ import { UserModule } from './user/user.module';
 
 import { AuditModule } from './audit/audit.module';
 import { NotificationModule } from './notification/notification.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { NotificationModule } from './notification/notification.module';
     UserModule,
     AuditModule,
     NotificationModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
