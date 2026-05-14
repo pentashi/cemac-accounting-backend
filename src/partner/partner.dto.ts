@@ -17,6 +17,8 @@ export class CreateClientDto {
   numero_contribuable?: string;
 }
 
+export class UpdateClientDto extends CreateClientDto {}
+
 export class CreateFournisseurDto {
   @ApiProperty({ description: 'Nom du fournisseur', example: 'Fournisseur XYZ' })
   nom: string;
@@ -33,3 +35,5 @@ export class CreateFournisseurDto {
   @ApiProperty({ description: 'Numéro contribuable', example: 'F987654321', required: false })
   numero_contribuable?: string;
 }
+
+export class UpdateFournisseurDto extends CreateFournisseurDto {}

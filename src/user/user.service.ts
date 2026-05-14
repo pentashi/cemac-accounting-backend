@@ -1,13 +1,12 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
-import * as crypto from 'crypto';
-import { sendPasswordResetEmail } from './email.util';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationService } from '../notification/notification.service';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UserService {
@@ -16,6 +15,7 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     private readonly auditLogService: AuditLogService,
     private readonly notificationService: NotificationService,
+    private readonly authService: AuthService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -24,13 +24,14 @@ export class UserService {
       emailProfessionnel: createUserDto.emailProfessionnel,
       telephone: createUserDto.telephone,
       motDePasse: createUserDto.motDePasse,
+      role: createUserDto.role ?? 'user',
     });
     const saved = await this.userRepository.save(user);
     await this.auditLogService.log(saved.id, 'create_user', 'User', String(saved.id), { raisonSociale: saved.raisonSociale });
     await this.notificationService.create(
       saved.id,
       'user_created',
-      `Bienvenue ${saved.raisonSociale}, votre compte a été créé.`
+      `Bienvenue ${saved.raisonSociale}, votre compte a été créé.`,
     );
     return saved;
   }
@@ -44,12 +45,12 @@ export class UserService {
   }
 
   async update(id: number, updateUserDto: Partial<User>) {
-    // Adapter pour ne mettre à jour que les champs existants dans User
     const allowedFields: (keyof User)[] = [
       'raisonSociale',
       'emailProfessionnel',
       'telephone',
       'motDePasse',
+      'role',
       'isVerified',
       'verificationCode',
       'verificationCodeExpires',
@@ -59,7 +60,7 @@ export class UserService {
     const filteredUpdate: Partial<User> = {};
     for (const key of allowedFields) {
       if (key in updateUserDto) {
-        filteredUpdate[key] = updateUserDto[key] as any;
+        filteredUpdate[key] = updateUserDto[key] as never;
       }
     }
     await this.userRepository.update(id, filteredUpdate);
@@ -75,31 +76,10 @@ export class UserService {
   }
 
   async requestPasswordReset(dto: RequestPasswordResetDto) {
-    const user = await this.userRepository.findOneBy({ emailProfessionnel: dto.email });
-    if (!user) return null;
-    user.resetCode = crypto.randomBytes(6).toString('hex');
-    user.resetCodeExpires = Date.now() + 3600 * 1000; // 1 hour
-    await this.userRepository.save(user);
-    await sendPasswordResetEmail(user.emailProfessionnel, user.resetCode);
-    await this.auditLogService.log(user.id, 'request_password_reset', 'User', String(user.id));
-    await this.notificationService.create(
-      user.id,
-      'password_reset_requested',
-      `Une demande de réinitialisation de mot de passe a été effectuée pour votre compte.`
-    );
-    return { emailProfessionnel: user.emailProfessionnel, message: 'Password reset code sent.' };
+    return this.authService.requestPasswordResetByEmail(dto.email);
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const user = await this.userRepository.findOneBy({ resetCode: dto.token });
-    if (!user || !user.resetCodeExpires || user.resetCodeExpires < Date.now()) {
-      return null;
-    }
-    user.motDePasse = dto.newPassword; // In production, hash password!
-    user.resetCode = undefined;
-    user.resetCodeExpires = undefined;
-    await this.userRepository.save(user);
-    await this.auditLogService.log(user.id, 'reset_password', 'User', String(user.id));
-    return { emailProfessionnel: user.emailProfessionnel };
+    return this.authService.resetPasswordWithToken(dto.email, dto.token, dto.newPassword);
   }
 }

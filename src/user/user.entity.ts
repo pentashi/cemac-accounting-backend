@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -31,4 +31,7 @@ export class User {
 
   @Column({ nullable: true, type: 'bigint' })
   resetCodeExpires?: number;
+
+  @Column({ type: 'varchar', default: 'user' })
+  role: 'admin' | 'user';
 }
