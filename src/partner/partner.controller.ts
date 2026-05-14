@@ -1,6 +1,22 @@
-
-import { Controller, Post, Get, Body, Query, Res, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  Res,
+  Req,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { PartnerService } from './partner.service';
 import { CreateClientDto, CreateFournisseurDto } from './partner.dto';
 import type { Response } from 'express';
@@ -33,9 +49,10 @@ export class PartnerController {
   async exportClients(
     @Query('format') format: 'pdf' | 'excel' | 'csv' = 'pdf',
     @Res() res: Response,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    const { buffer, filename, contentType } = await this.partnerService.exportClients(format, req.user?.id || 0);
+    const { buffer, filename, contentType } =
+      await this.partnerService.exportClients(format, req.user?.id || 0);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
     return res.send(buffer);
@@ -44,9 +61,17 @@ export class PartnerController {
   @Post('client/import')
   @ApiOperation({ summary: 'Import clients from CSV file' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FileInterceptor('file'))
-  async importClients(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+  async importClients(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
     return this.partnerService.importClients(file, req.user?.id || 0);
   }
 
@@ -72,9 +97,10 @@ export class PartnerController {
   async exportFournisseurs(
     @Query('format') format: 'pdf' | 'excel' | 'csv' = 'pdf',
     @Res() res: Response,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    const { buffer, filename, contentType } = await this.partnerService.exportFournisseurs(format, req.user?.id || 0);
+    const { buffer, filename, contentType } =
+      await this.partnerService.exportFournisseurs(format, req.user?.id || 0);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
     return res.send(buffer);
@@ -83,9 +109,17 @@ export class PartnerController {
   @Post('fournisseur/import')
   @ApiOperation({ summary: 'Import suppliers from CSV file' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FileInterceptor('file'))
-  async importFournisseurs(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+  async importFournisseurs(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
     return this.partnerService.importFournisseurs(file, req.user?.id || 0);
   }
 }

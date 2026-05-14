@@ -19,6 +19,6 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     to: email,
     subject: 'Password Reset Request',
     text: `You requested a password reset. Click the link to reset your password: ${resetUrl}`,
-    html: `<p>You requested a password reset.</p><p><a href="${resetUrl}">Reset Password</a></p>`
+    html: `<p>You requested a password reset.</p><p><a href="${resetUrl}">Reset Password</a></p>`,
   });
 }

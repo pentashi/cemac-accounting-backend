@@ -4,7 +4,10 @@ export class LigneFactureDto {
   @ApiProperty({ description: 'Numéro du produit', example: 'P001' })
   numeroProduit: string;
 
-  @ApiProperty({ description: 'Intitulé du produit', example: 'Ordinateur portable' })
+  @ApiProperty({
+    description: 'Intitulé du produit',
+    example: 'Ordinateur portable',
+  })
   intitule: string;
 
   @ApiProperty({ description: 'Quantité', example: 2 })
@@ -32,9 +35,17 @@ export class FactureCalculDto {
   @ApiProperty({ description: 'Type de vente', example: 'service' })
   typeVente: 'service' | 'marchandise';
 
-  @ApiProperty({ type: RemiseDto, required: false, description: 'Remise appliquée' })
+  @ApiProperty({
+    type: RemiseDto,
+    required: false,
+    description: 'Remise appliquée',
+  })
   remise?: RemiseDto;
 
-  @ApiProperty({ description: 'Acompte versé', example: 50000, required: false })
+  @ApiProperty({
+    description: 'Acompte versé',
+    example: 50000,
+    required: false,
+  })
   acompte?: number;
 }
