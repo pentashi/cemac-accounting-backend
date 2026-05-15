@@ -25,16 +25,26 @@ import { SettingsModule } from './settings/settings.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('DB_HOST'),
-        port: parseInt((config.get('DB_PORT') ?? '5432'), 10),
-        username: config.get('DB_USER'),
-        password: config.get('DB_PASSWORD'),
-        database: config.get('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: true,
-      }),
+      useFactory: (config: ConfigService) => {
+        const nodeEnv = config.get<string>('NODE_ENV');
+        const dbSynchronize = config.get<string>('DB_SYNCHRONIZE');
+
+        const synchronize =
+          dbSynchronize !== undefined
+            ? dbSynchronize.toLowerCase() === 'true'
+            : nodeEnv !== 'production';
+
+        return {
+          type: 'postgres',
+          host: config.get('DB_HOST'),
+          port: parseInt((config.get('DB_PORT') ?? '5432'), 10),
+          username: config.get('DB_USER'),
+          password: config.get('DB_PASSWORD'),
+          database: config.get('DB_NAME'),
+          autoLoadEntities: true,
+          synchronize,
+        };
+      },
     }),
     AuthModule,
     FactureModule,
