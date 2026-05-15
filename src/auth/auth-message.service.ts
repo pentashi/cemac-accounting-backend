@@ -45,10 +45,6 @@ export class AuthMessageService {
     return this.sendWebhookMessage(channel, destination, message);
   }
 
-  private getTwilioClient(): Twilio | null {
-    return this.twilioClient;
-  }
-
   private formatTwilioNumber(
     channel: 'whatsapp' | 'sms',
     value: string,
@@ -102,7 +98,7 @@ export class AuthMessageService {
     destination: string,
     message: string,
   ): Promise<DeliveryResult> {
-    const twilioClient = this.getTwilioClient();
+    const twilioClient = this.twilioClient;
     const from = this.configService.get<string>(
       channel === 'sms' ? 'TWILIO_SMS_FROM' : 'TWILIO_WHATSAPP_FROM',
     );
