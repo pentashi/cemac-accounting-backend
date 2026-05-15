@@ -14,10 +14,13 @@ export declare class UserController {
     getProfile(req: any): Promise<User | null>;
     updateProfile(req: any, updateUserDto: UpdateUserDto): Promise<User | null>;
     requestPasswordReset(dto: RequestPasswordResetDto): Promise<{
-        emailProfessionnel: string;
         message: string;
-    } | null>;
+        canal: import("../auth/auth-message.service").DeliveryChannel;
+        destination: string;
+        expiresInSeconds: number;
+        deliveryMode: "smtp" | "twilio" | "webhook" | "simulated";
+    }>;
     resetPassword(dto: ResetPasswordDto): Promise<{
-        emailProfessionnel: string;
-    } | null>;
+        message: string;
+    }>;
 }
