@@ -37,6 +37,8 @@ DB_PASSWORD=yourpassword
 DB_NAME=cemac_db
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_EXPIRES_IN=3600s
+# Optional explicit override for TypeORM schema auto-sync (production default is already false).
+DB_SYNCHRONIZE=false
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
@@ -61,6 +63,8 @@ For local setup, copy `.env.example` to `.env` and fill in your real credentials
 ```bash
 npm run start:dev
 ```
+
+For production-style startup (used by `npm run start`), the app builds first and runs `dist/main`.
 
 ### API Documentation
 - Swagger UI: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
