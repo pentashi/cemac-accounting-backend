@@ -37,7 +37,6 @@ DB_PASSWORD=yourpassword
 DB_NAME=cemac_db
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_EXPIRES_IN=3600s
-# Controls TypeORM schema auto-sync. Keep false in production unless explicitly needed.
 DB_SYNCHRONIZE=false
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587

@@ -14,11 +14,10 @@ const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
 const jwt_strategy_1 = require("./jwt.strategy");
 const typeorm_1 = require("@nestjs/typeorm");
-const user_entity_1 = require("../user/user.entity");
+const user_entity_1 = require("./user.entity");
 const config_1 = require("@nestjs/config");
 const roles_guard_1 = require("./roles.guard");
 const audit_module_1 = require("../audit/audit.module");
-const auth_message_service_1 = require("./auth-message.service");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -36,7 +35,7 @@ exports.AuthModule = AuthModule = __decorate([
             }),
             audit_module_1.AuditModule,
         ],
-        providers: [auth_service_1.AuthService, auth_message_service_1.AuthMessageService, jwt_strategy_1.JwtStrategy, roles_guard_1.RolesGuard],
+        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, roles_guard_1.RolesGuard],
         controllers: [auth_controller_1.AuthController],
         exports: [auth_service_1.AuthService, roles_guard_1.RolesGuard],
     })

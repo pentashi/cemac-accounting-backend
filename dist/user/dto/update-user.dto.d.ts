@@ -3,5 +3,9 @@ export declare class UpdateUserDto {
     emailProfessionnel?: string;
     telephone?: string;
     motDePasse?: string;
-    role?: 'admin' | 'user';
+    isVerified?: boolean;
+    verificationCode?: string;
+    verificationCodeExpires?: number;
+    resetCode?: string;
+    resetCodeExpires?: number;
 }

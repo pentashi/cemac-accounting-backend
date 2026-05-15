@@ -26,33 +26,8 @@ let AuditLogService = class AuditLogService {
         const log = this.auditLogRepository.create({ userId, action, entity, entityId, details });
         return this.auditLogRepository.save(log);
     }
-    async findAll(filters = {}) {
-        const query = this.auditLogRepository.createQueryBuilder('audit').orderBy('audit.createdAt', 'DESC');
-        if (filters.userId !== undefined) {
-            query.andWhere('audit.userId = :userId', { userId: filters.userId });
-        }
-        if (filters.entity) {
-            query.andWhere('audit.entity = :entity', { entity: filters.entity });
-        }
-        if (filters.entityId) {
-            query.andWhere('audit.entityId = :entityId', { entityId: filters.entityId });
-        }
-        if (filters.action) {
-            query.andWhere('audit.action = :action', { action: filters.action });
-        }
-        if (filters.from) {
-            query.andWhere('audit.createdAt >= :from', { from: filters.from });
-        }
-        if (filters.to) {
-            query.andWhere('audit.createdAt <= :to', { to: filters.to });
-        }
-        return query.getMany();
-    }
-    findOne(id) {
-        return this.auditLogRepository.findOneBy({ id });
-    }
-    findForUser(userId, filters = {}) {
-        return this.findAll({ ...filters, userId });
+    findAll() {
+        return this.auditLogRepository.find({ order: { createdAt: 'DESC' } });
     }
 };
 exports.AuditLogService = AuditLogService;

@@ -17,7 +17,11 @@ class CreateUserDto {
     telephone;
     motDePasse;
     confirmerMotDePasse;
-    role;
+    verificationCode;
+    verificationCodeExpires;
+    isVerified;
+    resetCode;
+    resetCodeExpires;
 }
 exports.CreateUserDto = CreateUserDto;
 __decorate([
@@ -41,7 +45,23 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "confirmerMotDePasse", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Rôle', example: 'user', required: false, enum: ['admin', 'user'] }),
+    (0, swagger_1.ApiProperty)({ description: 'Code de vérification', example: '123456', required: false }),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "role", void 0);
+], CreateUserDto.prototype, "verificationCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Expiration du code de vérification (timestamp)', example: 1714500000000, required: false }),
+    __metadata("design:type", Number)
+], CreateUserDto.prototype, "verificationCodeExpires", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Utilisateur vérifié', example: false, required: false }),
+    __metadata("design:type", Boolean)
+], CreateUserDto.prototype, "isVerified", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Code de réinitialisation', example: '654321', required: false }),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "resetCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Expiration du code de réinitialisation (timestamp)', example: 1714500000000, required: false }),
+    __metadata("design:type", Number)
+], CreateUserDto.prototype, "resetCodeExpires", void 0);
 //# sourceMappingURL=create-user.dto.js.map

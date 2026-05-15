@@ -4,5 +4,9 @@ export declare class CreateUserDto {
     telephone: string;
     motDePasse: string;
     confirmerMotDePasse: string;
-    role?: 'admin' | 'user';
+    verificationCode?: string;
+    verificationCodeExpires?: number;
+    isVerified?: boolean;
+    resetCode?: string;
+    resetCodeExpires?: number;
 }
