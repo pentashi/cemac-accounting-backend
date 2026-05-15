@@ -14,6 +14,8 @@ export interface DeliveryResult {
 
 @Injectable()
 export class AuthMessageService {
+  private twilioClient: Twilio | null | undefined;
+
   constructor(private readonly configService: ConfigService) {}
 
   async sendCode(
@@ -38,14 +40,20 @@ export class AuthMessageService {
   }
 
   private getTwilioClient(): Twilio | null {
+    if (this.twilioClient !== undefined) {
+      return this.twilioClient;
+    }
+
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
 
     if (!accountSid || !authToken) {
-      return null;
+      this.twilioClient = null;
+      return this.twilioClient;
     }
 
-    return twilio(accountSid, authToken);
+    this.twilioClient = twilio(accountSid, authToken);
+    return this.twilioClient;
   }
 
   private formatTwilioNumber(
