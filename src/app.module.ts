@@ -27,11 +27,11 @@ import { SettingsModule } from './settings/settings.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const nodeEnv = config.get<string>('NODE_ENV');
-        const dbSynchronize = config.get<string>('DB_SYNCHRONIZE');
+        const dbSynchronizeEnv = config.get<string>('DB_SYNCHRONIZE');
 
         const synchronize =
-          dbSynchronize !== undefined
-            ? dbSynchronize.toLowerCase() === 'true'
+          dbSynchronizeEnv !== undefined
+            ? dbSynchronizeEnv.toLowerCase() === 'true'
             : nodeEnv !== 'production';
 
         return {
