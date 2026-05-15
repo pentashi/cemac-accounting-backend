@@ -28,10 +28,11 @@ import { SettingsModule } from './settings/settings.module';
       useFactory: (config: ConfigService) => {
         const nodeEnv = config.get<string>('NODE_ENV');
         const dbSynchronizeEnv = config.get<string>('DB_SYNCHRONIZE')?.trim();
+        const syncOverride = dbSynchronizeEnv?.toLowerCase();
 
         const synchronize =
-          dbSynchronizeEnv
-            ? dbSynchronizeEnv.toLowerCase() === 'true'
+          syncOverride
+            ? ['true', '1', 'yes', 'on'].includes(syncOverride)
             : nodeEnv !== 'production';
 
         return {
