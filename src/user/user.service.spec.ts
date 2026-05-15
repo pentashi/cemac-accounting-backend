@@ -26,10 +26,10 @@ describe('UserService', () => {
 
   it('should create a user', async () => {
     const createUserDto = {
-      username: 'testuser',
-      email: 'test@example.com',
-      password: 'Test1234',
-      role: 'user',
+      raisonSociale: 'Test SARL',
+      emailProfessionnel: 'test@example.com',
+      telephone: '123456789',
+      motDePasse: 'Test1234',
     };
     // Mock repository create/save
     service['userRepository'].create = jest.fn().mockReturnValue(createUserDto);
@@ -38,17 +38,17 @@ describe('UserService', () => {
     service['notificationService'].create = jest.fn();
     const result = await service.create(createUserDto);
     expect(result).toMatchObject({ id: 1, ...createUserDto });
-    expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'create_user', 'User', '1', { username: 'testuser' });
+    expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'create_user', 'User', '1', { raisonSociale: 'Test SARL' });
     expect(service['notificationService'].create).toHaveBeenCalledWith(1, 'user_created', expect.any(String));
   });
 
   it('should update a user', async () => {
-    const updateUserDto = { username: 'updateduser' };
+    const updateUserDto = { raisonSociale: 'Updated SARL' };
     service['userRepository'].update = jest.fn().mockResolvedValue({});
-    service['userRepository'].findOneBy = jest.fn().mockResolvedValue({ id: 1, username: 'updateduser' });
+    service['userRepository'].findOneBy = jest.fn().mockResolvedValue({ id: 1, raisonSociale: 'Updated SARL' });
     service['auditLogService'].log = jest.fn();
     const result = await service.update(1, updateUserDto);
-    expect(result).toMatchObject({ id: 1, username: 'updateduser' });
+    expect(result).toMatchObject({ id: 1, raisonSociale: 'Updated SARL' });
     expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'update_user', 'User', '1', { updateUserDto });
   });
 
@@ -62,26 +62,31 @@ describe('UserService', () => {
 
   it('should request password reset', async () => {
     const dto = { email: 'test@example.com' };
-    const user = { id: 1, email: 'test@example.com' };
+    const user = { id: 1, emailProfessionnel: 'test@example.com' };
     service['userRepository'].findOneBy = jest.fn().mockResolvedValue(user);
     service['userRepository'].save = jest.fn();
     service['auditLogService'].log = jest.fn();
     service['notificationService'].create = jest.fn();
     (require('./email.util').sendPasswordResetEmail as jest.Mock) = jest.fn();
     const result = await service.requestPasswordReset(dto);
-    expect(result).toHaveProperty('email', 'test@example.com');
+    expect(result).toHaveProperty('emailProfessionnel', 'test@example.com');
     expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'request_password_reset', 'User', '1');
     expect(service['notificationService'].create).toHaveBeenCalledWith(1, 'password_reset_requested', expect.any(String));
   });
 
   it('should reset password', async () => {
     const dto = { token: 'token123', newPassword: 'NewPass123' };
-    const user = { id: 1, resetPasswordToken: 'token123', resetPasswordExpires: Date.now() + 10000 };
+    const user = {
+      id: 1,
+      resetCode: 'token123',
+      resetCodeExpires: Date.now() + 10000,
+      emailProfessionnel: 'test@example.com',
+    };
     service['userRepository'].findOneBy = jest.fn().mockResolvedValue(user);
     service['userRepository'].save = jest.fn();
     service['auditLogService'].log = jest.fn();
     const result = await service.resetPassword(dto);
-    expect(result).toHaveProperty('email');
+    expect(result).toHaveProperty('emailProfessionnel');
     expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'reset_password', 'User', '1');
   });
 });
