@@ -7,11 +7,7 @@ import { AuditModule } from '../audit/audit.module';
 import { FactureModule } from '../invoice/facture.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Client, Fournisseur]),
-    AuditModule,
-    FactureModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Client, Fournisseur]), AuditModule, FactureModule],
   providers: [PartnerService],
   controllers: [PartnerController],
 })

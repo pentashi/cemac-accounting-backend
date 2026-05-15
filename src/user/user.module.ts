@@ -8,12 +8,7 @@ import { NotificationModule } from '../notification/notification.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    AuditModule,
-    NotificationModule,
-    AuthModule,
-  ],
+  imports: [TypeOrmModule.forFeature([User]), AuditModule, NotificationModule, AuthModule],
   providers: [UserService],
   controllers: [UserController],
   exports: [UserService],

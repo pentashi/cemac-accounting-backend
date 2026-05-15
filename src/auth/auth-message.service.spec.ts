@@ -48,7 +48,10 @@ describe('AuthMessageService', () => {
       'verification',
     );
 
-    expect(mockTwilio).toHaveBeenCalledWith('[REDACTED]', 'token');
+    expect(mockTwilio).toHaveBeenCalledWith(
+      '[REDACTED]',
+      'token',
+    );
     const smsPayload = mockCreate.mock.calls[0]?.[0];
 
     expect(smsPayload.body).toContain('123456');

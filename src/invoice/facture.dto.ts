@@ -4,10 +4,7 @@ export class LigneFactureDto {
   @ApiProperty({ description: 'Numéro du produit', example: 'P001' })
   numeroProduit: string;
 
-  @ApiProperty({
-    description: 'Intitulé du produit',
-    example: 'Ordinateur portable',
-  })
+  @ApiProperty({ description: 'Intitulé du produit', example: 'Ordinateur portable' })
   intitule: string;
 
   @ApiProperty({ description: 'Quantité', example: 2 })
@@ -35,18 +32,10 @@ export class FactureCalculDto {
   @ApiProperty({ description: 'Type de vente', example: 'service' })
   typeVente: 'service' | 'marchandise';
 
-  @ApiProperty({
-    type: RemiseDto,
-    required: false,
-    description: 'Remise appliquée',
-  })
+  @ApiProperty({ type: RemiseDto, required: false, description: 'Remise appliquée' })
   remise?: RemiseDto;
 
-  @ApiProperty({
-    description: 'Acompte versé',
-    example: 50000,
-    required: false,
-  })
+  @ApiProperty({ description: 'Acompte versé', example: 50000, required: false })
   acompte?: number;
 }
 
@@ -63,11 +52,7 @@ export class CreateFactureDto extends FactureCalculDto {
   @ApiProperty({ description: 'Date d’échéance', example: '2026-05-30' })
   dateEcheance: string;
 
-  @ApiProperty({
-    description: 'Statut initial',
-    enum: ['brouillon', 'envoyee', 'reglee', 'impayee'],
-    required: false,
-  })
+  @ApiProperty({ description: 'Statut initial', enum: ['brouillon', 'envoyee', 'reglee', 'impayee'], required: false })
   statut?: 'brouillon' | 'envoyee' | 'reglee' | 'impayee';
 }
 
@@ -87,10 +72,7 @@ export class UpdateFactureDto {
   @ApiProperty({ required: false })
   dateEcheance?: string;
 
-  @ApiProperty({
-    required: false,
-    enum: ['brouillon', 'envoyee', 'reglee', 'impayee'],
-  })
+  @ApiProperty({ required: false, enum: ['brouillon', 'envoyee', 'reglee', 'impayee'] })
   statut?: 'brouillon' | 'envoyee' | 'reglee' | 'impayee';
 }
 
@@ -109,11 +91,7 @@ export class RegisterInvoicePaymentDto {
   @ApiProperty({ description: 'Date du paiement', example: '2026-05-14' })
   datePaiement: string;
 
-  @ApiProperty({
-    description: 'Référence du paiement',
-    example: 'TRX-001',
-    required: false,
-  })
+  @ApiProperty({ description: 'Référence du paiement', example: 'TRX-001', required: false })
   reference?: string;
 
   @ApiProperty({ description: 'Note complémentaire', required: false })

@@ -20,7 +20,6 @@ const reporting_module_1 = require("./reporting/reporting.module");
 const user_module_1 = require("./user/user.module");
 const audit_module_1 = require("./audit/audit.module");
 const notification_module_1 = require("./notification/notification.module");
-const settings_module_1 = require("./settings/settings.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -50,7 +49,6 @@ exports.AppModule = AppModule = __decorate([
             user_module_1.UserModule,
             audit_module_1.AuditModule,
             notification_module_1.NotificationModule,
-            settings_module_1.SettingsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
