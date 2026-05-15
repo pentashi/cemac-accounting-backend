@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import twilio, { Twilio } from 'twilio';
@@ -14,6 +14,7 @@ export interface DeliveryResult {
 
 @Injectable()
 export class AuthMessageService {
+  private readonly logger = new Logger(AuthMessageService.name);
   private readonly twilioClient: Twilio | null;
 
   constructor(private readonly configService: ConfigService) {
@@ -79,18 +80,19 @@ export class AuthMessageService {
         })
       : nodemailer.createTransport({ jsonTransport: true });
 
-    await transporter.sendMail({
-      from,
-      to: destination,
-      subject,
-      text: message,
-    });
+    if (host) {
+      try {
+        await transporter.sendMail({ from, to: destination, subject, text: message });
+        return { channel: 'email', destination, mode: 'smtp' };
+      } catch (err) {
+        this.logger.warn(
+          `SMTP delivery failed (${(err as Error).message}). Falling back to simulated mode.`,
+        );
+        return { channel: 'email', destination, mode: 'simulated' };
+      }
+    }
 
-    return {
-      channel: 'email',
-      destination,
-      mode: host ? 'smtp' : 'simulated',
-    };
+    return { channel: 'email', destination, mode: 'simulated' };
   }
 
   private async sendWebhookMessage(
