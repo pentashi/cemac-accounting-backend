@@ -38,7 +38,13 @@ export class SettingsService {
   async updateSettings(payload: Partial<Settings>, userId: number) {
     const current = await this.ensureSettings();
     await this.settingsRepository.update(current.id, payload);
-    await this.auditLogService.log(userId, 'update_settings', 'Settings', String(current.id), payload);
+    await this.auditLogService.log(
+      userId,
+      'update_settings',
+      'Settings',
+      String(current.id),
+      payload,
+    );
     return this.ensureSettings();
   }
 }

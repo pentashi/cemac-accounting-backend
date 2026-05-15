@@ -7,7 +7,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('CEMAC Accounting API')
-    .setDescription('API documentation for the CEMAC-compliant accounting backend')
+    .setDescription(
+      'API documentation for the CEMAC-compliant accounting backend',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();

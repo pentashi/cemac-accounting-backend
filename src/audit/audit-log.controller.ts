@@ -39,7 +39,13 @@ export class AuditLogController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.auditLogService.findForUser(req.user.id, { entity, entityId, action, from, to });
+    return this.auditLogService.findForUser(req.user.id, {
+      entity,
+      entityId,
+      action,
+      from,
+      to,
+    });
   }
 
   @Get(':id')

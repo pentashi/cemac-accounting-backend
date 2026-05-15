@@ -34,29 +34,52 @@ describe('EcritureService', () => {
       piece: 'piece.pdf',
     };
     service['ecritureRepo'].create = jest.fn().mockReturnValue(dto);
-    service['ecritureRepo'].save = jest.fn().mockResolvedValue({ id: 1, ...dto });
+    service['ecritureRepo'].save = jest
+      .fn()
+      .mockResolvedValue({ id: 1, ...dto });
     service['auditLogService'].log = jest.fn();
     const result = await service.create(dto);
     expect(result).toMatchObject({ id: 1, ...dto });
-    expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'create_ecriture', 'EcritureComptable', '1', { compte: '601100' });
+    expect(service['auditLogService'].log).toHaveBeenCalledWith(
+      1,
+      'create_ecriture',
+      'EcritureComptable',
+      '1',
+      { compte: '601100' },
+    );
   });
 
   it('should update an accounting entry', async () => {
     const updateDto = { libelle: 'Achat modifié' };
     service['ecritureRepo'].update = jest.fn().mockResolvedValue({});
-    service['ecritureRepo'].findOneBy = jest.fn().mockResolvedValue({ id: 1, libelle: 'Achat modifié' });
+    service['ecritureRepo'].findOneBy = jest
+      .fn()
+      .mockResolvedValue({ id: 1, libelle: 'Achat modifié' });
     service['auditLogService'].log = jest.fn();
     const result = await service.update(1, updateDto);
     expect(result).toMatchObject({ id: 1, libelle: 'Achat modifié' });
-    expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'update_ecriture', 'EcritureComptable', '1', { update: updateDto });
+    expect(service['auditLogService'].log).toHaveBeenCalledWith(
+      1,
+      'update_ecriture',
+      'EcritureComptable',
+      '1',
+      { update: updateDto },
+    );
   });
 
   it('should delete an accounting entry', async () => {
-    service['ecritureRepo'].delete = jest.fn().mockResolvedValue({ affected: 1 });
+    service['ecritureRepo'].delete = jest
+      .fn()
+      .mockResolvedValue({ affected: 1 });
     service['auditLogService'].log = jest.fn();
     const result = await service.delete(1);
     expect(result).toMatchObject({ affected: 1 });
-    expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'delete_ecriture', 'EcritureComptable', '1');
+    expect(service['auditLogService'].log).toHaveBeenCalledWith(
+      1,
+      'delete_ecriture',
+      'EcritureComptable',
+      '1',
+    );
   });
 
   it('should get income statement', async () => {

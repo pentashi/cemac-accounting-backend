@@ -15,18 +15,20 @@ const facture_entity_1 = require("./facture.entity");
 const ligne_facture_entity_1 = require("./ligne-facture.entity");
 const audit_module_1 = require("../audit/audit.module");
 const notification_module_1 = require("../notification/notification.module");
+const paiement_facture_entity_1 = require("./paiement-facture.entity");
 let FactureModule = class FactureModule {
 };
 exports.FactureModule = FactureModule;
 exports.FactureModule = FactureModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([facture_entity_1.Facture, ligne_facture_entity_1.LigneFacture]),
+            typeorm_1.TypeOrmModule.forFeature([facture_entity_1.Facture, ligne_facture_entity_1.LigneFacture, paiement_facture_entity_1.PaiementFacture]),
             audit_module_1.AuditModule,
             notification_module_1.NotificationModule,
         ],
         providers: [facture_service_1.FactureService],
         controllers: [facture_controller_1.FactureController],
+        exports: [facture_service_1.FactureService],
     })
 ], FactureModule);
 //# sourceMappingURL=facture.module.js.map
