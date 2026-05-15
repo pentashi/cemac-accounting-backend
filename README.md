@@ -35,15 +35,23 @@ DB_PORT=5432
 DB_USER=youruser
 DB_PASSWORD=yourpassword
 DB_NAME=cemac_db
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=replace-with-a-long-random-secret
 JWT_EXPIRES_IN=3600s
-SMTP_HOST=smtp.example.com
+SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your_smtp_user
-SMTP_PASS=your_smtp_pass
-SMTP_FROM=no-reply@example.com
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM=your-email@gmail.com
 FRONTEND_URL=http://localhost:3000
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=replace-with-your-twilio-auth-token
+TWILIO_SMS_FROM=+1234567890
+TWILIO_WHATSAPP_FROM=+14155238886
+SMS_PROVIDER_URL=
+WHATSAPP_PROVIDER_URL=
 ```
+
+For local setup, copy `.env.example` to `.env` and fill in your real credentials. Do not commit real secrets.
 
 ### Database
 - Run migrations or let TypeORM auto-sync entities (recommended for development only).
