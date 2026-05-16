@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 export type DeliveryChannel = 'email' | 'whatsapp' | 'sms';
 export type DeliveryPurpose = 'verification' | 'password_reset';
@@ -8,7 +8,7 @@ export type DeliveryPurpose = 'verification' | 'password_reset';
 export interface DeliveryResult {
   channel: DeliveryChannel;
   destination: string;
-  mode: 'smtp' | 'twilio' | 'webhook' | 'simulated';
+  mode: 'resend' | 'twilio' | 'webhook' | 'simulated';
 }
 
 interface TwilioMessageClient {
@@ -35,6 +35,8 @@ export class AuthMessageService {
   private readonly twilioAuthToken: string | null;
   private twilioClient: TwilioMessageClient | null = null;
   private twilioClientLoaded = false;
+  private readonly resendClient: Resend | null;
+  private readonly resendFrom: string;
 
   constructor(private readonly configService: ConfigService) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
@@ -42,6 +44,11 @@ export class AuthMessageService {
 
     this.twilioAccountSid = accountSid ?? null;
     this.twilioAuthToken = authToken ?? null;
+
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    this.resendClient = apiKey ? new Resend(apiKey) : null;
+    this.resendFrom =
+      this.configService.get<string>('RESEND_FROM') ?? 'onboarding@resend.dev';
   }
 
   private getTwilioClient(): TwilioMessageClient | null {
@@ -116,44 +123,24 @@ export class AuthMessageService {
     subject: string,
     message: string,
   ): Promise<DeliveryResult> {
-    const host = this.configService.get<string>('SMTP_HOST');
-    const port = Number(this.configService.get<string>('SMTP_PORT') ?? '587');
-    const user = this.configService.get<string>('SMTP_USER');
-    const pass = this.configService.get<string>('SMTP_PASS');
-    const from =
-      this.configService.get<string>('SMTP_FROM') ??
-      user ??
-      'no-reply@example.com';
-
-    const transporter = host
-      ? nodemailer.createTransport({
-          host,
-          port,
-          secure: port === 465,
-          auth: user && pass ? { user, pass } : undefined,
-          connectionTimeout: 10_000,
-          socketTimeout: 10_000,
-        })
-      : nodemailer.createTransport({ jsonTransport: true });
-
-    if (host) {
-      try {
-        await transporter.sendMail({
-          from,
-          to: destination,
-          subject,
-          text: message,
-        });
-        return { channel: 'email', destination, mode: 'smtp' };
-      } catch (err) {
-        this.logger.warn(
-          `SMTP delivery failed (${(err as Error).message}). Falling back to simulated mode.`,
-        );
-        return { channel: 'email', destination, mode: 'simulated' };
-      }
+    if (!this.resendClient) {
+      return { channel: 'email', destination, mode: 'simulated' };
     }
 
-    return { channel: 'email', destination, mode: 'simulated' };
+    try {
+      await this.resendClient.emails.send({
+        from: this.resendFrom,
+        to: destination,
+        subject,
+        text: message,
+      });
+      return { channel: 'email', destination, mode: 'resend' };
+    } catch (err) {
+      this.logger.warn(
+        `Resend delivery failed (${(err as Error).message}). Falling back to simulated mode.`,
+      );
+      return { channel: 'email', destination, mode: 'simulated' };
+    }
   }
 
   private async sendWebhookMessage(

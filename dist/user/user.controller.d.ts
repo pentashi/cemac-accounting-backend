@@ -18,7 +18,7 @@ export declare class UserController {
         canal: import("../auth/auth-message.service").DeliveryChannel;
         destination: string;
         expiresInSeconds: number;
-        deliveryMode: "smtp" | "twilio" | "webhook" | "simulated";
+        deliveryMode: "resend" | "twilio" | "webhook" | "simulated";
     }>;
     resetPassword(dto: ResetPasswordDto): Promise<{
         message: string;

@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthMessageService } from './auth-message.service';
 
 const mockTwilio = jest.fn();
+const mockResendSend = jest.fn();
 
 jest.mock(
   'twilio',
@@ -11,6 +12,12 @@ jest.mock(
   }),
   { virtual: true },
 );
+
+jest.mock('resend', () => ({
+  Resend: jest.fn().mockImplementation(() => ({
+    emails: { send: mockResendSend },
+  })),
+}));
 
 interface TwilioMessagePayload {
   body: string;
@@ -28,6 +35,7 @@ describe('AuthMessageService', () => {
         create: mockCreate,
       },
     });
+    mockResendSend.mockResolvedValue({ id: 'mock-email-id' });
   });
 
   function createService(config: Record<string, string | undefined>) {
@@ -37,6 +45,61 @@ describe('AuthMessageService', () => {
 
     return new AuthMessageService(configService);
   }
+
+  it('sends email codes via Resend when API key is configured', async () => {
+    const service = createService({
+      RESEND_API_KEY: 'test-api-key',
+      RESEND_FROM: 'onboarding@resend.dev',
+    });
+
+    const result = await service.sendCode(
+      'email',
+      'user@example.com',
+      '123456',
+      'verification',
+    );
+
+    expect(mockResendSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'user@example.com',
+        from: 'onboarding@resend.dev',
+        text: expect.stringContaining('123456'),
+      }),
+    );
+    expect(result.mode).toBe('resend');
+    expect(result.channel).toBe('email');
+  });
+
+  it('falls back to simulated mode when RESEND_API_KEY is not set', async () => {
+    const service = createService({});
+
+    const result = await service.sendCode(
+      'email',
+      'user@example.com',
+      '654321',
+      'password_reset',
+    );
+
+    expect(mockResendSend).not.toHaveBeenCalled();
+    expect(result.mode).toBe('simulated');
+  });
+
+  it('falls back to simulated mode when Resend send fails', async () => {
+    mockResendSend.mockRejectedValueOnce(new Error('resend api error'));
+
+    const service = createService({
+      RESEND_API_KEY: 'test-api-key',
+    });
+
+    const result = await service.sendCode(
+      'email',
+      'user@example.com',
+      '000000',
+      'verification',
+    );
+
+    expect(result.mode).toBe('simulated');
+  });
 
   it('sends SMS codes with the Twilio SDK', async () => {
     const service = createService({
