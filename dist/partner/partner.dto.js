@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateFournisseurDto = exports.CreateClientDto = void 0;
+exports.UpdateFournisseurDto = exports.CreateFournisseurDto = exports.UpdateClientDto = exports.CreateClientDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 class CreateClientDto {
     nom;
@@ -39,6 +39,9 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Numéro contribuable', example: 'M123456789', required: false }),
     __metadata("design:type", String)
 ], CreateClientDto.prototype, "numero_contribuable", void 0);
+class UpdateClientDto extends CreateClientDto {
+}
+exports.UpdateClientDto = UpdateClientDto;
 class CreateFournisseurDto {
     nom;
     email;
@@ -67,4 +70,7 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Numéro contribuable', example: 'F987654321', required: false }),
     __metadata("design:type", String)
 ], CreateFournisseurDto.prototype, "numero_contribuable", void 0);
+class UpdateFournisseurDto extends CreateFournisseurDto {
+}
+exports.UpdateFournisseurDto = UpdateFournisseurDto;
 //# sourceMappingURL=partner.dto.js.map

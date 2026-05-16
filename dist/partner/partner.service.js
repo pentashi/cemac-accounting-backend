@@ -73,10 +73,17 @@ let PartnerService = class PartnerService {
     findAllClients() {
         return this.clientRepo.find();
     }
+    async findClientById(id) {
+        const client = await this.clientRepo.findOneBy({ id });
+        if (!client) {
+            throw new common_1.NotFoundException('Client introuvable');
+        }
+        return client;
+    }
     async exportClients(format, userId) {
         const clients = await this.clientRepo.find();
         let buffer;
-        let filename = `clients.${format}`;
+        const filename = `clients.${format}`;
         let contentType = 'application/octet-stream';
         if (format === 'pdf') {
             contentType = 'application/pdf';
@@ -88,8 +95,6 @@ let PartnerService = class PartnerService {
                 doc.text(`${c.nom} | ${c.email} | ${c.telephone} | ${c.adresse} | ${c.numero_contribuable || ''}`);
             });
             doc.end();
-            for await (const chunk of doc)
-                chunks.push(chunk);
             for await (const chunk of doc)
                 chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
             buffer = Buffer.concat(chunks);
@@ -145,13 +150,15 @@ let PartnerService = class PartnerService {
     }
     async updateClient(id, dto) {
         await this.clientRepo.update(id, dto);
-        const updated = await this.clientRepo.findOneBy({ id });
-        await this.auditLogService.log(id, 'update_client', 'Client', String(id), { update: dto });
-        return updated;
+        return this.findClientById(id).then(async (updated) => {
+            await this.auditLogService.log(id, 'update_client', 'Client', String(id), { update: dto });
+            return updated;
+        });
     }
     async deleteClient(id) {
+        const existing = await this.findClientById(id);
         const result = await this.clientRepo.delete(id);
-        await this.auditLogService.log(id, 'delete_client', 'Client', String(id));
+        await this.auditLogService.log(id, 'delete_client', 'Client', String(existing.id));
         return result;
     }
     async createFournisseur(dto) {
@@ -163,10 +170,17 @@ let PartnerService = class PartnerService {
     findAllFournisseurs() {
         return this.fournisseurRepo.find();
     }
+    async findFournisseurById(id) {
+        const fournisseur = await this.fournisseurRepo.findOneBy({ id });
+        if (!fournisseur) {
+            throw new common_1.NotFoundException('Fournisseur introuvable');
+        }
+        return fournisseur;
+    }
     async exportFournisseurs(format, userId) {
         const fournisseurs = await this.fournisseurRepo.find();
         let buffer;
-        let filename = `fournisseurs.${format}`;
+        const filename = `fournisseurs.${format}`;
         let contentType = 'application/octet-stream';
         if (format === 'pdf') {
             contentType = 'application/pdf';
@@ -179,7 +193,7 @@ let PartnerService = class PartnerService {
             });
             doc.end();
             for await (const chunk of doc)
-                chunks.push(chunk);
+                chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
             buffer = Buffer.concat(chunks);
         }
         else if (format === 'excel') {
@@ -233,13 +247,15 @@ let PartnerService = class PartnerService {
     }
     async updateFournisseur(id, dto) {
         await this.fournisseurRepo.update(id, dto);
-        const updated = await this.fournisseurRepo.findOneBy({ id });
-        await this.auditLogService.log(id, 'update_fournisseur', 'Fournisseur', String(id), { update: dto });
-        return updated;
+        return this.findFournisseurById(id).then(async (updated) => {
+            await this.auditLogService.log(id, 'update_fournisseur', 'Fournisseur', String(id), { update: dto });
+            return updated;
+        });
     }
     async deleteFournisseur(id) {
+        const existing = await this.findFournisseurById(id);
         const result = await this.fournisseurRepo.delete(id);
-        await this.auditLogService.log(id, 'delete_fournisseur', 'Fournisseur', String(id));
+        await this.auditLogService.log(id, 'delete_fournisseur', 'Fournisseur', String(existing.id));
         return result;
     }
 };

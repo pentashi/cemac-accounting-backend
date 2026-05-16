@@ -6,23 +6,23 @@ export declare class AuthController {
     login(body: {
         emailProfessionnel: string;
         motDePasse: string;
-    }): Promise<{
-        access_token: string;
-    } | {
-        error: string;
-    }>;
+    }): Promise<any>;
     register(createUserDto: CreateUserDto): Promise<import("../user/user.entity").User>;
     getProfile(req: any): Promise<any>;
     envoyerCodeVerification(body: {
         emailProfessionnel?: string;
         telephone?: string;
-        canal: 'email' | 'whatsapp';
+        canal: 'email' | 'whatsapp' | 'sms';
     }): Promise<{
         message: string;
-        code: string;
+        canal: import("./auth-message.service").DeliveryChannel;
+        destination: string;
+        expiresInSeconds: number;
+        deliveryMode: "smtp" | "twilio" | "webhook" | "simulated";
     }>;
     verifierCode(body: {
-        emailProfessionnel: string;
+        emailProfessionnel?: string;
+        telephone?: string;
         code: string;
     }): Promise<{
         message: string;
@@ -33,19 +33,21 @@ export declare class AuthController {
         canal: 'email' | 'whatsapp' | 'sms';
     }): Promise<{
         message: string;
-        code: string;
+        canal: import("./auth-message.service").DeliveryChannel;
+        destination: string;
+        expiresInSeconds: number;
+        deliveryMode: "smtp" | "twilio" | "webhook" | "simulated";
     }>;
     resetMdp(body: {
-        emailProfessionnel: string;
+        emailProfessionnel?: string;
+        telephone?: string;
         code: string;
         nouveauMotDePasse: string;
+        canal: 'email' | 'whatsapp' | 'sms';
     }): Promise<{
         message: string;
     }>;
     loginGoogle(body: {
         googleToken: string;
-    }): Promise<{
-        message: string;
-        googleToken: string;
-    }>;
+    }): Promise<void>;
 }
