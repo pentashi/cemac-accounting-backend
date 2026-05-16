@@ -22,18 +22,12 @@ __decorate([
     __metadata("design:type", String)
 ], RequestPasswordResetDto.prototype, "email", void 0);
 class ResetPasswordDto {
-    email;
     token;
     newPassword;
 }
 exports.ResetPasswordDto = ResetPasswordDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Email address tied to the reset code', example: 'john.doe@example.com' }),
-    (0, class_validator_1.IsEmail)(),
-    __metadata("design:type", String)
-], ResetPasswordDto.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Password reset token', example: '123456' }),
+    (0, swagger_1.ApiProperty)({ description: 'Password reset token', example: 'abcdef123456' }),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], ResetPasswordDto.prototype, "token", void 0);

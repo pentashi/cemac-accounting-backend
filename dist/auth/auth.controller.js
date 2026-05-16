@@ -25,13 +25,13 @@ let AuthController = class AuthController {
     }
     async login(body) {
         const user = await this.authService.validateUser(body.emailProfessionnel, body.motDePasse);
-        if (!user || user.error) {
-            return user ?? { error: 'Identifiants invalides' };
+        if (!user) {
+            return { error: 'Identifiants invalides' };
         }
         return this.authService.login(user);
     }
     async register(createUserDto) {
-        return this.authService.register(createUserDto.raisonSociale, createUserDto.emailProfessionnel, createUserDto.telephone, createUserDto.motDePasse, createUserDto.confirmerMotDePasse, createUserDto.role);
+        return this.authService.register(createUserDto.raisonSociale, createUserDto.emailProfessionnel, createUserDto.telephone, createUserDto.motDePasse, createUserDto.confirmerMotDePasse);
     }
     async getProfile(req) {
         return req.user;
@@ -40,13 +40,13 @@ let AuthController = class AuthController {
         return this.authService.envoyerCodeVerification(body);
     }
     async verifierCode(body) {
-        return this.authService.verifierCode({ emailProfessionnel: body.emailProfessionnel, telephone: body.telephone }, body.code);
+        return this.authService.verifierCode(body.emailProfessionnel, body.code);
     }
     async demanderResetMdp(body) {
         return this.authService.demanderResetMdp(body);
     }
     async resetMdp(body) {
-        return this.authService.resetMdp(body);
+        return this.authService.resetMdp(body.emailProfessionnel, body.code, body.nouveauMotDePasse);
     }
     async loginGoogle(body) {
         return this.authService.loginWithGoogle(body.googleToken);
@@ -94,14 +94,14 @@ __decorate([
 ], AuthController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Post)('envoyer-code-verification'),
-    (0, swagger_1.ApiOperation)({ summary: 'Envoyer un code de vérification par email, SMS ou WhatsApp' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Envoyer un code de vérification par email ou WhatsApp' }),
     (0, swagger_1.ApiBody)({
         schema: {
             type: 'object',
             properties: {
                 emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
                 telephone: { type: 'string', example: '+33612345678' },
-                canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
+                canal: { type: 'string', enum: ['email', 'whatsapp'], example: 'email' },
             },
             required: ['canal'],
         },
@@ -119,10 +119,9 @@ __decorate([
             type: 'object',
             properties: {
                 emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
-                telephone: { type: 'string', example: '+33612345678' },
                 code: { type: 'string', example: '123456' },
             },
-            required: ['code'],
+            required: ['emailProfessionnel', 'code'],
         },
     }),
     __param(0, (0, common_1.Body)()),
@@ -157,12 +156,10 @@ __decorate([
             type: 'object',
             properties: {
                 emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
-                telephone: { type: 'string', example: '+33612345678' },
                 code: { type: 'string', example: '123456' },
                 nouveauMotDePasse: { type: 'string', example: 'NouveauP@ssw0rd' },
-                canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
             },
-            required: ['code', 'nouveauMotDePasse', 'canal'],
+            required: ['emailProfessionnel', 'code', 'nouveauMotDePasse'],
         },
     }),
     __param(0, (0, common_1.Body)()),

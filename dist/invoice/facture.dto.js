@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegisterInvoicePaymentDto = exports.UpdateFactureStatusDto = exports.UpdateFactureDto = exports.CreateFactureDto = exports.FactureCalculDto = exports.RemiseDto = exports.LigneFactureDto = void 0;
+exports.FactureCalculDto = exports.RemiseDto = exports.LigneFactureDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 class LigneFactureDto {
     numeroProduit;
@@ -75,106 +75,4 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Acompte versé', example: 50000, required: false }),
     __metadata("design:type", Number)
 ], FactureCalculDto.prototype, "acompte", void 0);
-class CreateFactureDto extends FactureCalculDto {
-    clientId;
-    numeroFacture;
-    dateCreation;
-    dateEcheance;
-    statut;
-}
-exports.CreateFactureDto = CreateFactureDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Client lié à la facture', example: 1 }),
-    __metadata("design:type", Number)
-], CreateFactureDto.prototype, "clientId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Numéro de facture', example: 'FAC-2026-0001' }),
-    __metadata("design:type", String)
-], CreateFactureDto.prototype, "numeroFacture", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Date de création', example: '2026-05-14' }),
-    __metadata("design:type", String)
-], CreateFactureDto.prototype, "dateCreation", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Date d’échéance', example: '2026-05-30' }),
-    __metadata("design:type", String)
-], CreateFactureDto.prototype, "dateEcheance", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Statut initial', enum: ['brouillon', 'envoyee', 'reglee', 'impayee'], required: false }),
-    __metadata("design:type", String)
-], CreateFactureDto.prototype, "statut", void 0);
-class UpdateFactureDto {
-    lignes;
-    typeVente;
-    remise;
-    acompte;
-    dateEcheance;
-    statut;
-}
-exports.UpdateFactureDto = UpdateFactureDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false, type: [LigneFactureDto] }),
-    __metadata("design:type", Array)
-], UpdateFactureDto.prototype, "lignes", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
-], UpdateFactureDto.prototype, "typeVente", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false, type: RemiseDto }),
-    __metadata("design:type", RemiseDto)
-], UpdateFactureDto.prototype, "remise", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", Number)
-], UpdateFactureDto.prototype, "acompte", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false }),
-    __metadata("design:type", String)
-], UpdateFactureDto.prototype, "dateEcheance", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false, enum: ['brouillon', 'envoyee', 'reglee', 'impayee'] }),
-    __metadata("design:type", String)
-], UpdateFactureDto.prototype, "statut", void 0);
-class UpdateFactureStatusDto {
-    statut;
-}
-exports.UpdateFactureStatusDto = UpdateFactureStatusDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ enum: ['brouillon', 'envoyee', 'reglee', 'impayee'] }),
-    __metadata("design:type", String)
-], UpdateFactureStatusDto.prototype, "statut", void 0);
-class RegisterInvoicePaymentDto {
-    montant;
-    canal;
-    datePaiement;
-    reference;
-    note;
-    clientId;
-}
-exports.RegisterInvoicePaymentDto = RegisterInvoicePaymentDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Montant payé', example: 250000 }),
-    __metadata("design:type", Number)
-], RegisterInvoicePaymentDto.prototype, "montant", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Canal de paiement', example: 'virement' }),
-    __metadata("design:type", String)
-], RegisterInvoicePaymentDto.prototype, "canal", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Date du paiement', example: '2026-05-14' }),
-    __metadata("design:type", String)
-], RegisterInvoicePaymentDto.prototype, "datePaiement", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Référence du paiement', example: 'TRX-001', required: false }),
-    __metadata("design:type", String)
-], RegisterInvoicePaymentDto.prototype, "reference", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Note complémentaire', required: false }),
-    __metadata("design:type", String)
-], RegisterInvoicePaymentDto.prototype, "note", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Client attendu pour contrôle', required: false }),
-    __metadata("design:type", Number)
-], RegisterInvoicePaymentDto.prototype, "clientId", void 0);
 //# sourceMappingURL=facture.dto.js.map

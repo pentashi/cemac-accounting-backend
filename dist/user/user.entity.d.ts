@@ -9,5 +9,4 @@ export declare class User {
     isVerified: boolean;
     resetCode?: string;
     resetCodeExpires?: number;
-    role: 'admin' | 'user';
 }

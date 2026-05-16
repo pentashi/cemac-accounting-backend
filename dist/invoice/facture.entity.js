@@ -21,13 +21,9 @@ let Facture = class Facture {
     sous_total_ht;
     montant_remise;
     tps;
-    total_ht_apres_tps;
-    sous_total_apres_remise;
     tva;
     total_ttc;
     acompte;
-    montant_paye;
-    solde_a_payer;
     statut;
 };
 exports.Facture = Facture;
@@ -60,21 +56,13 @@ __decorate([
     __metadata("design:type", Number)
 ], Facture.prototype, "sous_total_ht", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2, default: 0 }),
+    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2 }),
     __metadata("design:type", Number)
 ], Facture.prototype, "montant_remise", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2, default: 0 }),
+    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2 }),
     __metadata("design:type", Number)
 ], Facture.prototype, "tps", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
-], Facture.prototype, "total_ht_apres_tps", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
-], Facture.prototype, "sous_total_apres_remise", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2 }),
     __metadata("design:type", Number)
@@ -84,19 +72,11 @@ __decorate([
     __metadata("design:type", Number)
 ], Facture.prototype, "total_ttc", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2, default: 0 }),
+    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2 }),
     __metadata("design:type", Number)
 ], Facture.prototype, "acompte", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
-], Facture.prototype, "montant_paye", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 15, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
-], Facture.prototype, "solde_a_payer", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'enum', enum: ['brouillon', 'envoyee', 'reglee', 'impayee'], default: 'brouillon' }),
+    (0, typeorm_1.Column)({ type: 'enum', enum: ['brouillon', 'envoyee', 'reglee', 'impayee'] }),
     __metadata("design:type", String)
 ], Facture.prototype, "statut", void 0);
 exports.Facture = Facture = __decorate([
