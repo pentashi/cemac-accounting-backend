@@ -21,10 +21,12 @@ interface TwilioMessageClient {
   };
 }
 
-type TwilioFactory = (sid: string, token: string) => TwilioMessageClient;
-type TwilioModuleShape = {
-  default?: TwilioFactory;
-} & Partial<TwilioFactory>;
+type TwilioClientFactory = (sid: string, token: string) => TwilioMessageClient;
+type TwilioModuleExports =
+  | {
+      default?: TwilioClientFactory;
+    }
+  | TwilioClientFactory;
 
 @Injectable()
 export class AuthMessageService {
@@ -54,16 +56,20 @@ export class AuthMessageService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const twilioModule = require('twilio') as TwilioModuleShape;
-      const twilioFactory = twilioModule.default ?? twilioModule;
+      const twilioModule = require('twilio') as TwilioModuleExports;
+      const twilioFactory =
+        typeof twilioModule === 'function'
+          ? twilioModule
+          : twilioModule.default;
 
-      if (typeof twilioFactory !== 'function') {
+      if (!twilioFactory) {
         return null;
       }
 
-      this.twilioClient = (
-        twilioFactory as (sid: string, token: string) => TwilioMessageClient
-      )(this.twilioAccountSid, this.twilioAuthToken);
+      this.twilioClient = twilioFactory(
+        this.twilioAccountSid,
+        this.twilioAuthToken,
+      );
       return this.twilioClient;
     } catch (err) {
       this.logger.warn(
