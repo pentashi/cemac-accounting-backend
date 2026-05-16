@@ -13,12 +13,13 @@ const partner_service_1 = require("./partner.service");
 const partner_controller_1 = require("./partner.controller");
 const partner_entity_1 = require("./partner.entity");
 const audit_module_1 = require("../audit/audit.module");
+const facture_module_1 = require("../invoice/facture.module");
 let PartnerModule = class PartnerModule {
 };
 exports.PartnerModule = PartnerModule;
 exports.PartnerModule = PartnerModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([partner_entity_1.Client, partner_entity_1.Fournisseur]), audit_module_1.AuditModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([partner_entity_1.Client, partner_entity_1.Fournisseur]), audit_module_1.AuditModule, facture_module_1.FactureModule],
         providers: [partner_service_1.PartnerService],
         controllers: [partner_controller_1.PartnerController],
     })

@@ -22,6 +22,7 @@ let User = class User {
     isVerified;
     resetCode;
     resetCodeExpires;
+    role;
 };
 exports.User = User;
 __decorate([
@@ -64,7 +65,11 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true, type: 'bigint' }),
     __metadata("design:type", Number)
 ], User.prototype, "resetCodeExpires", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', default: 'user' }),
+    __metadata("design:type", String)
+], User.prototype, "role", void 0);
 exports.User = User = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)('users')
 ], User);
 //# sourceMappingURL=user.entity.js.map
