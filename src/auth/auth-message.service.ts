@@ -21,6 +21,11 @@ interface TwilioMessageClient {
   };
 }
 
+type TwilioFactory = (sid: string, token: string) => TwilioMessageClient;
+type TwilioModuleShape = {
+  default?: TwilioFactory;
+} & Partial<TwilioFactory>;
+
 @Injectable()
 export class AuthMessageService {
   private readonly logger = new Logger(AuthMessageService.name);
@@ -49,9 +54,7 @@ export class AuthMessageService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const twilioModule = require('twilio') as {
-        default?: unknown;
-      };
+      const twilioModule = require('twilio') as TwilioModuleShape;
       const twilioFactory = twilioModule.default ?? twilioModule;
 
       if (typeof twilioFactory !== 'function') {
@@ -62,9 +65,9 @@ export class AuthMessageService {
         twilioFactory as (sid: string, token: string) => TwilioMessageClient
       )(this.twilioAccountSid, this.twilioAuthToken);
       return this.twilioClient;
-    } catch {
+    } catch (err) {
       this.logger.warn(
-        'Twilio SDK is not installed. Falling back to webhook/simulated delivery.',
+        `Twilio SDK is unavailable (${(err as Error).message}). Falling back to webhook/simulated delivery.`,
       );
       return null;
     }
