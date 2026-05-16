@@ -1,11 +1,16 @@
 import { ConfigService } from '@nestjs/config';
-import twilio from 'twilio';
 import { AuthMessageService } from './auth-message.service';
 
-jest.mock('twilio', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+const mockTwilio = jest.fn();
+
+jest.mock(
+  'twilio',
+  () => ({
+    __esModule: true,
+    default: mockTwilio,
+  }),
+  { virtual: true },
+);
 
 interface TwilioMessagePayload {
   body: string;
@@ -14,7 +19,6 @@ interface TwilioMessagePayload {
 }
 
 describe('AuthMessageService', () => {
-  const mockTwilio = twilio as jest.Mock;
   const mockCreate = jest.fn<Promise<void>, [TwilioMessagePayload]>();
 
   beforeEach(() => {
@@ -48,10 +52,7 @@ describe('AuthMessageService', () => {
       'verification',
     );
 
-    expect(mockTwilio).toHaveBeenCalledWith(
-      '[REDACTED]',
-      'token',
-    );
+    expect(mockTwilio).toHaveBeenCalledWith('[REDACTED]', 'token');
     const smsPayload = mockCreate.mock.calls[0]?.[0];
 
     expect(smsPayload.body).toContain('123456');

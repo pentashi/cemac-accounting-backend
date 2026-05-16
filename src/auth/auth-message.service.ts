@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import twilio, { Twilio } from 'twilio';
 
 export type DeliveryChannel = 'email' | 'whatsapp' | 'sms';
 export type DeliveryPurpose = 'verification' | 'password_reset';
@@ -12,17 +11,72 @@ export interface DeliveryResult {
   mode: 'smtp' | 'twilio' | 'webhook' | 'simulated';
 }
 
+interface TwilioMessageClient {
+  messages: {
+    create(params: {
+      body: string;
+      from: string;
+      to: string;
+    }): Promise<unknown>;
+  };
+}
+
+type TwilioClientFactory = (sid: string, token: string) => TwilioMessageClient;
+type TwilioModuleExports =
+  | {
+      default?: TwilioClientFactory;
+    }
+  | TwilioClientFactory;
+
 @Injectable()
 export class AuthMessageService {
   private readonly logger = new Logger(AuthMessageService.name);
-  private readonly twilioClient: Twilio | null;
+  private readonly twilioAccountSid: string | null;
+  private readonly twilioAuthToken: string | null;
+  private twilioClient: TwilioMessageClient | null = null;
+  private twilioClientLoaded = false;
 
   constructor(private readonly configService: ConfigService) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
 
-    this.twilioClient =
-      accountSid && authToken ? twilio(accountSid, authToken) : null;
+    this.twilioAccountSid = accountSid ?? null;
+    this.twilioAuthToken = authToken ?? null;
+  }
+
+  private getTwilioClient(): TwilioMessageClient | null {
+    if (this.twilioClientLoaded) {
+      return this.twilioClient;
+    }
+    this.twilioClientLoaded = true;
+
+    if (!this.twilioAccountSid || !this.twilioAuthToken) {
+      return null;
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const twilioModule = require('twilio') as TwilioModuleExports;
+      const twilioFactory =
+        typeof twilioModule === 'function'
+          ? twilioModule
+          : twilioModule.default;
+
+      if (!twilioFactory) {
+        return null;
+      }
+
+      this.twilioClient = twilioFactory(
+        this.twilioAccountSid,
+        this.twilioAuthToken,
+      );
+      return this.twilioClient;
+    } catch (err) {
+      this.logger.warn(
+        `Twilio SDK is unavailable (${(err as Error).message}). Falling back to webhook/simulated delivery.`,
+      );
+      return null;
+    }
   }
 
   async sendCode(
@@ -82,7 +136,12 @@ export class AuthMessageService {
 
     if (host) {
       try {
-        await transporter.sendMail({ from, to: destination, subject, text: message });
+        await transporter.sendMail({
+          from,
+          to: destination,
+          subject,
+          text: message,
+        });
         return { channel: 'email', destination, mode: 'smtp' };
       } catch (err) {
         this.logger.warn(
@@ -100,7 +159,7 @@ export class AuthMessageService {
     destination: string,
     message: string,
   ): Promise<DeliveryResult> {
-    const twilioClient = this.twilioClient;
+    const twilioClient = this.getTwilioClient();
     const from = this.configService.get<string>(
       channel === 'sms' ? 'TWILIO_SMS_FROM' : 'TWILIO_WHATSAPP_FROM',
     );
