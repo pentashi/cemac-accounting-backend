@@ -41,7 +41,12 @@ describe('AuditLogService', () => {
       { id: 1, userId: 1, action: 'create_user', entity: 'User', entityId: '1', details: {}, createdAt: new Date() },
       { id: 2, userId: 2, action: 'delete_client', entity: 'Client', entityId: '2', details: {}, createdAt: new Date() },
     ];
-    service['auditLogRepository'].find = jest.fn().mockResolvedValue(logs);
+    const mockQuery = {
+      orderBy: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue(logs),
+    };
+    service['auditLogRepository'].createQueryBuilder = jest.fn().mockReturnValue(mockQuery);
     const result = await service.findAll();
     expect(result).toEqual(logs);
   });

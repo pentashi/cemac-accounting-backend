@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationService } from '../notification/notification.service';
+import { AuthService } from '../auth/auth.service';
 
 describe('UserService', () => {
   let service: UserService;
@@ -15,6 +16,7 @@ describe('UserService', () => {
         { provide: getRepositoryToken(User), useValue: {} },
         { provide: AuditLogService, useValue: { log: jest.fn() } },
         { provide: NotificationService, useValue: { create: jest.fn() } },
+        { provide: AuthService, useValue: { requestPasswordResetByEmail: jest.fn(), resetPasswordWithToken: jest.fn() } },
       ],
     }).compile();
     service = module.get<UserService>(UserService);
@@ -63,30 +65,18 @@ describe('UserService', () => {
   it('should request password reset', async () => {
     const dto = { email: 'test@example.com' };
     const user = { id: 1, emailProfessionnel: 'test@example.com' };
-    service['userRepository'].findOneBy = jest.fn().mockResolvedValue(user);
-    service['userRepository'].save = jest.fn();
-    service['auditLogService'].log = jest.fn();
-    service['notificationService'].create = jest.fn();
-    (require('./email.util').sendPasswordResetEmail as jest.Mock) = jest.fn();
+    service['authService'].requestPasswordResetByEmail = jest.fn().mockResolvedValue(user);
     const result = await service.requestPasswordReset(dto);
     expect(result).toHaveProperty('emailProfessionnel', 'test@example.com');
-    expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'request_password_reset', 'User', '1');
-    expect(service['notificationService'].create).toHaveBeenCalledWith(1, 'password_reset_requested', expect.any(String));
+    expect(service['authService'].requestPasswordResetByEmail).toHaveBeenCalledWith('test@example.com');
   });
 
   it('should reset password', async () => {
-    const dto = { token: 'token123', newPassword: 'NewPass123' };
-    const user = {
-      id: 1,
-      resetCode: 'token123',
-      resetCodeExpires: Date.now() + 10000,
-      emailProfessionnel: 'test@example.com',
-    };
-    service['userRepository'].findOneBy = jest.fn().mockResolvedValue(user);
-    service['userRepository'].save = jest.fn();
-    service['auditLogService'].log = jest.fn();
+    const dto = { email: 'test@example.com', token: 'token123', newPassword: 'NewPass123' };
+    const user = { id: 1, emailProfessionnel: 'test@example.com' };
+    service['authService'].resetPasswordWithToken = jest.fn().mockResolvedValue(user);
     const result = await service.resetPassword(dto);
     expect(result).toHaveProperty('emailProfessionnel');
-    expect(service['auditLogService'].log).toHaveBeenCalledWith(1, 'reset_password', 'User', '1');
+    expect(service['authService'].resetPasswordWithToken).toHaveBeenCalledWith('test@example.com', 'token123', 'NewPass123');
   });
 });

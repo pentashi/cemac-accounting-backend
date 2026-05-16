@@ -3,6 +3,7 @@ import { FactureService } from './facture.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Facture } from './facture.entity';
 import { LigneFacture } from './ligne-facture.entity';
+import { PaiementFacture } from './paiement-facture.entity';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationService } from '../notification/notification.service';
 
@@ -15,6 +16,7 @@ describe('FactureService', () => {
         FactureService,
         { provide: getRepositoryToken(Facture), useValue: {} },
         { provide: getRepositoryToken(LigneFacture), useValue: {} },
+        { provide: getRepositoryToken(PaiementFacture), useValue: {} },
         { provide: AuditLogService, useValue: { log: jest.fn() } },
         { provide: NotificationService, useValue: { create: jest.fn() } },
       ],
@@ -49,12 +51,17 @@ describe('FactureService', () => {
     );
     expect(service['notificationService'].create).toHaveBeenCalledWith(
       1,
-      'facture_created',
+      'facture_calculated',
       expect.stringContaining('Montant TTC')
     );
   });
 
   it('should update a facture', async () => {
+    const mockFacture = { id: 1, montant: 1000, lignes: [], montant_paye: 0, total_ttc: 1000, type_vente: 'service', date_echeance: null, statut: 'brouillon' };
+    service['factureRepo'].findOneBy = jest.fn().mockResolvedValue(mockFacture);
+    service['ligneFactureRepo'].find = jest.fn().mockResolvedValue([]);
+    service['paiementFactureRepo'].find = jest.fn().mockResolvedValue([]);
+    service['factureRepo'].update = jest.fn().mockResolvedValue({});
     service['auditLogService'].log = jest.fn();
     const result = await service.updateFacture(1, { montant: 1000 }, 2);
     expect(result).toMatchObject({ id: 1, montant: 1000 });
@@ -62,6 +69,13 @@ describe('FactureService', () => {
   });
 
   it('should delete a facture', async () => {
+    const mockFacture = { id: 1, lignes: [], paiements: [] };
+    service['factureRepo'].findOneBy = jest.fn().mockResolvedValue(mockFacture);
+    service['ligneFactureRepo'].find = jest.fn().mockResolvedValue([]);
+    service['paiementFactureRepo'].find = jest.fn().mockResolvedValue([]);
+    service['ligneFactureRepo'].delete = jest.fn().mockResolvedValue({});
+    service['paiementFactureRepo'].delete = jest.fn().mockResolvedValue({});
+    service['factureRepo'].delete = jest.fn().mockResolvedValue({});
     service['auditLogService'].log = jest.fn();
     const result = await service.deleteFacture(1, 3);
     expect(result).toMatchObject({ id: 1, deleted: true });

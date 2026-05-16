@@ -50,6 +50,7 @@ describe('PartnerService', () => {
   });
 
   it('should delete a client', async () => {
+    service['clientRepo'].findOneBy = jest.fn().mockResolvedValue({ id: 1, nom: 'ClientTest' });
     service['clientRepo'].delete = jest.fn().mockResolvedValue({ affected: 1 });
     service['auditLogService'].log = jest.fn();
     const result = await service.deleteClient(1);
@@ -84,6 +85,7 @@ describe('PartnerService', () => {
   });
 
   it('should delete a fournisseur', async () => {
+    service['fournisseurRepo'].findOneBy = jest.fn().mockResolvedValue({ id: 2, nom: 'FournisseurTest' });
     service['fournisseurRepo'].delete = jest.fn().mockResolvedValue({ affected: 1 });
     service['auditLogService'].log = jest.fn();
     const result = await service.deleteFournisseur(2);
