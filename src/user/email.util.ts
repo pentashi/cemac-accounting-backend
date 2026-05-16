@@ -10,6 +10,8 @@ export async function sendPasswordResetEmail(email: string, token: string) {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 10_000,
+    socketTimeout: 10_000,
   });
 
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;

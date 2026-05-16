@@ -131,6 +131,8 @@ export class AuthMessageService {
           port,
           secure: port === 465,
           auth: user && pass ? { user, pass } : undefined,
+          connectionTimeout: 10_000,
+          socketTimeout: 10_000,
         })
       : nodemailer.createTransport({ jsonTransport: true });
 
