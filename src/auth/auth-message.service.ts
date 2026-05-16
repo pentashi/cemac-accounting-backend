@@ -35,6 +35,8 @@ export class AuthMessageService {
   private readonly twilioAuthToken: string | null;
   private twilioClient: TwilioMessageClient | null = null;
   private twilioClientLoaded = false;
+  private readonly resendClient: Resend | null;
+  private readonly resendFrom: string;
 
   constructor(private readonly configService: ConfigService) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
@@ -42,6 +44,11 @@ export class AuthMessageService {
 
     this.twilioAccountSid = accountSid ?? null;
     this.twilioAuthToken = authToken ?? null;
+
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    this.resendClient = apiKey ? new Resend(apiKey) : null;
+    this.resendFrom =
+      this.configService.get<string>('RESEND_FROM') ?? 'onboarding@resend.dev';
   }
 
   private getTwilioClient(): TwilioMessageClient | null {
@@ -116,18 +123,13 @@ export class AuthMessageService {
     subject: string,
     message: string,
   ): Promise<DeliveryResult> {
-    const apiKey = this.configService.get<string>('RESEND_API_KEY');
-    const from =
-      this.configService.get<string>('RESEND_FROM') ?? 'onboarding@resend.dev';
-
-    if (!apiKey) {
+    if (!this.resendClient) {
       return { channel: 'email', destination, mode: 'simulated' };
     }
 
     try {
-      const resend = new Resend(apiKey);
-      await resend.emails.send({
-        from,
+      await this.resendClient.emails.send({
+        from: this.resendFrom,
         to: destination,
         subject,
         text: message,

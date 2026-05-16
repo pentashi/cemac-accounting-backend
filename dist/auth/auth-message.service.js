@@ -21,12 +21,18 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
     twilioAuthToken;
     twilioClient = null;
     twilioClientLoaded = false;
+    resendClient;
+    resendFrom;
     constructor(configService) {
         this.configService = configService;
         const accountSid = this.configService.get('TWILIO_ACCOUNT_SID');
         const authToken = this.configService.get('TWILIO_AUTH_TOKEN');
         this.twilioAccountSid = accountSid ?? null;
         this.twilioAuthToken = authToken ?? null;
+        const apiKey = this.configService.get('RESEND_API_KEY');
+        this.resendClient = apiKey ? new resend_1.Resend(apiKey) : null;
+        this.resendFrom =
+            this.configService.get('RESEND_FROM') ?? 'onboarding@resend.dev';
     }
     getTwilioClient() {
         if (this.twilioClientLoaded) {
@@ -70,15 +76,12 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         return value.startsWith('whatsapp:') ? value : `whatsapp:${value}`;
     }
     async sendEmail(destination, subject, message) {
-        const apiKey = this.configService.get('RESEND_API_KEY');
-        const from = this.configService.get('RESEND_FROM') ?? 'onboarding@resend.dev';
-        if (!apiKey) {
+        if (!this.resendClient) {
             return { channel: 'email', destination, mode: 'simulated' };
         }
         try {
-            const resend = new resend_1.Resend(apiKey);
-            await resend.emails.send({
-                from,
+            await this.resendClient.emails.send({
+                from: this.resendFrom,
                 to: destination,
                 subject,
                 text: message,

@@ -13,6 +13,8 @@ export declare class AuthMessageService {
     private readonly twilioAuthToken;
     private twilioClient;
     private twilioClientLoaded;
+    private readonly resendClient;
+    private readonly resendFrom;
     constructor(configService: ConfigService);
     private getTwilioClient;
     sendCode(channel: DeliveryChannel, destination: string, code: string, purpose: DeliveryPurpose): Promise<DeliveryResult>;
