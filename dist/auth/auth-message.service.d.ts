@@ -4,7 +4,7 @@ export type DeliveryPurpose = 'verification' | 'password_reset';
 export interface DeliveryResult {
     channel: DeliveryChannel;
     destination: string;
-    mode: 'smtp' | 'twilio' | 'webhook' | 'simulated';
+    mode: 'resend' | 'twilio' | 'webhook' | 'simulated';
 }
 export declare class AuthMessageService {
     private readonly configService;

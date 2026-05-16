@@ -18,7 +18,7 @@ export declare class AuthController {
         canal: import("./auth-message.service").DeliveryChannel;
         destination: string;
         expiresInSeconds: number;
-        deliveryMode: "smtp" | "twilio" | "webhook" | "simulated";
+        deliveryMode: "resend" | "twilio" | "webhook" | "simulated";
     }>;
     verifierCode(body: {
         emailProfessionnel?: string;
@@ -36,7 +36,7 @@ export declare class AuthController {
         canal: import("./auth-message.service").DeliveryChannel;
         destination: string;
         expiresInSeconds: number;
-        deliveryMode: "smtp" | "twilio" | "webhook" | "simulated";
+        deliveryMode: "resend" | "twilio" | "webhook" | "simulated";
     }>;
     resetMdp(body: {
         emailProfessionnel?: string;
