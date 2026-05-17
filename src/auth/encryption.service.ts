@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   createCipheriv,
   createDecipheriv,
+  createHash,
   pbkdf2Sync,
   randomBytes,
   type CipherGCM,
@@ -23,15 +24,18 @@ export class EncryptionService {
     this.algorithm =
       this.configService.get<string>('OTP_ENCRYPTION_ALGORITHM') ?? 'aes-256-gcm';
     const configuredKey = this.configService.get<string>('OTP_ENCRYPTION_KEY');
-    if (!configuredKey) {
-      throw new Error('OTP_ENCRYPTION_KEY is required');
-    }
-    if (!/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
+    if (configuredKey && !/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
       throw new Error(
         'OTP_ENCRYPTION_KEY must be a 64-character hexadecimal string',
       );
     }
-    this.encryptionKey = configuredKey;
+    const fallbackSecret = this.configService.get<string>('JWT_SECRET');
+    if (!configuredKey && !fallbackSecret) {
+      throw new Error('OTP_ENCRYPTION_KEY or JWT_SECRET is required');
+    }
+    this.encryptionKey =
+      configuredKey ??
+      createHash('sha256').update(fallbackSecret ?? '').digest('hex');
     this.ivLength = Number.parseInt(
       this.configService.get<string>('OTP_IV_LENGTH') ?? '16',
       10,
