@@ -48,8 +48,9 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         const smtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : undefined;
         const smtpSecureRaw = this.configService.get('MAIL_SECURE') ??
             this.configService.get('SMTP_SECURE');
-        const smtpSecure = smtpSecureRaw
-            ? ['true', '1', 'yes', 'on'].includes(smtpSecureRaw.toLowerCase())
+        const smtpSecureNormalized = smtpSecureRaw?.trim().toLowerCase();
+        const smtpSecure = smtpSecureNormalized
+            ? ['true', '1', 'yes', 'on'].includes(smtpSecureNormalized)
             : (smtpPort ?? 587) === 465;
         this.smtpFrom =
             this.configService.get('MAIL_FROM_ADDRESS') ??
@@ -158,7 +159,7 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
             await twilioClient.messages.create({
                 body: message,
                 from: from ? this.formatTwilioNumber(channel, from) : undefined,
-                messagingServiceSid: from ? undefined : messagingServiceSid,
+                messagingServiceSid,
                 to: this.formatTwilioNumber(channel, destination),
             });
             return {

@@ -49,13 +49,18 @@ exports.AppModule = AppModule = __decorate([
                         const parsedPort = parsedUrl.port
                             ? parseInt(parsedUrl.port, 10)
                             : 5432;
+                        const parsedDatabaseName = decodeURIComponent(parsedUrl.pathname.replace(/^\//, ''));
+                        const database = parsedDatabaseName || dbName;
+                        if (!database) {
+                            throw new Error('DATABASE_URL must include a database name or DB_NAME must be set.');
+                        }
                         return {
                             type: 'postgres',
                             host: parsedUrl.hostname,
                             port: parsedPort,
                             username: decodeURIComponent(parsedUrl.username),
                             password: decodeURIComponent(parsedUrl.password),
-                            database: decodeURIComponent(parsedUrl.pathname.replace(/^\//, '')),
+                            database,
                             autoLoadEntities: true,
                             synchronize,
                             ssl: config.get('DB_SSL')?.toLowerCase() === 'false'
