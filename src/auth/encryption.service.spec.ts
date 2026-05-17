@@ -27,7 +27,7 @@ describe('EncryptionService', () => {
     const jwtSecret = 'my-jwt-secret';
     const expectedKey = pbkdf2Sync(
       jwtSecret,
-      'otp-encryption-fallback-key',
+      'cemac-accounting-backend:otp-fallback',
       100000,
       32,
       'sha512',

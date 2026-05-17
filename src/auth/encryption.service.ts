@@ -11,7 +11,8 @@ import {
 
 @Injectable()
 export class EncryptionService {
-  private static readonly fallbackSalt = 'otp-encryption-fallback-key';
+  private static readonly defaultFallbackSalt =
+    'cemac-accounting-backend:otp-fallback';
   private static readonly fallbackIterations = 100000;
   private readonly algorithm: string;
   private readonly encryptionKey: string;
@@ -31,18 +32,24 @@ export class EncryptionService {
       );
     }
     const fallbackSecret = this.configService.get<string>('JWT_SECRET');
-    if (!configuredKey && !fallbackSecret) {
-      throw new Error('OTP_ENCRYPTION_KEY or JWT_SECRET is required');
-    }
-    this.encryptionKey =
-      configuredKey ??
-      pbkdf2Sync(
-        fallbackSecret!,
-        EncryptionService.fallbackSalt,
+    const fallbackSalt =
+      this.configService.get<string>('OTP_ENCRYPTION_FALLBACK_SALT') ??
+      this.configService.get<string>('DB_NAME') ??
+      EncryptionService.defaultFallbackSalt;
+
+    if (configuredKey) {
+      this.encryptionKey = configuredKey;
+    } else if (fallbackSecret) {
+      this.encryptionKey = pbkdf2Sync(
+        fallbackSecret,
+        fallbackSalt,
         EncryptionService.fallbackIterations,
         32,
         'sha512',
       ).toString('hex');
+    } else {
+      throw new Error('OTP_ENCRYPTION_KEY or JWT_SECRET is required');
+    }
     this.ivLength = Number.parseInt(
       this.configService.get<string>('OTP_IV_LENGTH') ?? '16',
       10,
