@@ -74,9 +74,10 @@ let FactureService = class FactureService {
         const sousTotalHT = dto.lignes.reduce((sum, ligne) => sum + ligne.prixUnitaireHT * ligne.quantite, 0);
         let montantRemise = 0;
         if (dto.remise) {
-            montantRemise = dto.remise.type === 'pourcentage'
-                ? sousTotalHT * (dto.remise.valeur / 100)
-                : dto.remise.valeur;
+            montantRemise =
+                dto.remise.type === 'pourcentage'
+                    ? sousTotalHT * (dto.remise.valeur / 100)
+                    : dto.remise.valeur;
         }
         const sousTotalApresRemise = sousTotalHT - montantRemise;
         let tps = 0;
@@ -112,7 +113,9 @@ let FactureService = class FactureService {
     }
     async exportInvoice(id, format) {
         const facture = await this.factureRepo.findOneBy({ id });
-        const lignes = await this.ligneFactureRepo.find({ where: { facture_id: id } });
+        const lignes = await this.ligneFactureRepo.find({
+            where: { facture_id: id },
+        });
         if (!facture)
             throw new common_1.NotFoundException('Facture not found');
         let buffer;
@@ -126,7 +129,7 @@ let FactureService = class FactureService {
             doc.text(`Date: ${facture.date_creation}`);
             doc.text(`Client ID: ${facture.client_id}`);
             doc.text('---');
-            lignes.forEach(ligne => {
+            lignes.forEach((ligne) => {
                 doc.text(`${ligne.intitule} x${ligne.quantite} @ ${ligne.prix_unitaire_ht} HT`);
             });
             doc.text('---');
@@ -137,12 +140,18 @@ let FactureService = class FactureService {
             buffer = Buffer.concat(chunks);
         }
         else if (format === 'excel') {
-            contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            contentType =
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
             const workbook = new ExcelJS.Workbook();
             const sheet = workbook.addWorksheet('Facture');
             sheet.addRow(['Produit', 'Quantité', 'Prix Unitaire HT', 'TVA']);
-            lignes.forEach(ligne => {
-                sheet.addRow([ligne.intitule, ligne.quantite, ligne.prix_unitaire_ht, ligne.taux_tva]);
+            lignes.forEach((ligne) => {
+                sheet.addRow([
+                    ligne.intitule,
+                    ligne.quantite,
+                    ligne.prix_unitaire_ht,
+                    ligne.taux_tva,
+                ]);
             });
             sheet.addRow([]);
             sheet.addRow(['Total TTC', facture.total_ttc]);
@@ -152,16 +161,21 @@ let FactureService = class FactureService {
             contentType = 'text/csv';
             const rows = [
                 ['Produit', 'Quantité', 'Prix Unitaire HT', 'TVA'],
-                ...lignes.map(ligne => [ligne.intitule, ligne.quantite, ligne.prix_unitaire_ht, ligne.taux_tva]),
+                ...lignes.map((ligne) => [
+                    ligne.intitule,
+                    ligne.quantite,
+                    ligne.prix_unitaire_ht,
+                    ligne.taux_tva,
+                ]),
                 [],
                 ['Total TTC', facture.total_ttc],
             ];
             const csvChunks = [];
             const stream = (0, fast_csv_1.format)({ headers: false });
-            stream.on('data', chunk => csvChunks.push(Buffer.from(chunk)));
-            rows.forEach(row => stream.write(row));
+            stream.on('data', (chunk) => csvChunks.push(Buffer.from(chunk)));
+            rows.forEach((row) => stream.write(row));
             stream.end();
-            await new Promise(resolve => stream.on('end', resolve));
+            await new Promise((resolve) => stream.on('end', resolve));
             buffer = Buffer.concat(csvChunks);
         }
         else {
@@ -179,7 +193,7 @@ let FactureService = class FactureService {
     }
     async saveLines(factureId, lignes) {
         await this.ligneFactureRepo.delete({ facture_id: factureId });
-        const entities = lignes.map(ligne => this.ligneFactureRepo.create({
+        const entities = lignes.map((ligne) => this.ligneFactureRepo.create({
             facture_id: factureId,
             numero_produit: ligne.numeroProduit,
             intitule: ligne.intitule,
@@ -222,20 +236,26 @@ let FactureService = class FactureService {
         if (!facture) {
             throw new common_1.NotFoundException('Facture introuvable');
         }
-        const lignes = await this.ligneFactureRepo.find({ where: { facture_id: id } });
-        const paiements = await this.paiementFactureRepo.find({ where: { factureId: id }, order: { createdAt: 'DESC' } });
+        const lignes = await this.ligneFactureRepo.find({
+            where: { facture_id: id },
+        });
+        const paiements = await this.paiementFactureRepo.find({
+            where: { factureId: id },
+            order: { createdAt: 'DESC' },
+        });
         return { ...facture, lignes, paiements };
     }
     async updateFacture(id, dto, userId) {
         const current = await this.findOne(id);
         const recalculatedInput = {
-            lignes: dto.lignes ?? current.lignes.map((ligne) => ({
-                numeroProduit: ligne.numero_produit,
-                intitule: ligne.intitule,
-                quantite: ligne.quantite,
-                prixUnitaireHT: Number(ligne.prix_unitaire_ht),
-                tauxTVA: Number(ligne.taux_tva),
-            })),
+            lignes: dto.lignes ??
+                current.lignes.map((ligne) => ({
+                    numeroProduit: ligne.numero_produit,
+                    intitule: ligne.intitule,
+                    quantite: ligne.quantite,
+                    prixUnitaireHT: Number(ligne.prix_unitaire_ht),
+                    tauxTVA: Number(ligne.taux_tva),
+                })),
             typeVente: dto.typeVente ?? current.type_vente,
             remise: dto.remise,
             acompte: Number(current.montant_paye),

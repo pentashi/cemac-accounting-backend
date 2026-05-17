@@ -19,7 +19,11 @@ let PartnerModule = class PartnerModule {
 exports.PartnerModule = PartnerModule;
 exports.PartnerModule = PartnerModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([partner_entity_1.Client, partner_entity_1.Fournisseur]), audit_module_1.AuditModule, facture_module_1.FactureModule],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([partner_entity_1.Client, partner_entity_1.Fournisseur]),
+            audit_module_1.AuditModule,
+            facture_module_1.FactureModule,
+        ],
         providers: [partner_service_1.PartnerService],
         controllers: [partner_controller_1.PartnerController],
     })

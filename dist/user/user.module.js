@@ -20,7 +20,12 @@ let UserModule = class UserModule {
 exports.UserModule = UserModule;
 exports.UserModule = UserModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User]), audit_module_1.AuditModule, notification_module_1.NotificationModule, auth_module_1.AuthModule],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User]),
+            audit_module_1.AuditModule,
+            notification_module_1.NotificationModule,
+            auth_module_1.AuthModule,
+        ],
         providers: [user_service_1.UserService],
         controllers: [user_controller_1.UserController],
         exports: [user_service_1.UserService],

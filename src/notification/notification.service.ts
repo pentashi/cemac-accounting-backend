@@ -11,12 +11,19 @@ export class NotificationService {
   ) {}
 
   async create(userId: number, type: string, message: string) {
-    const notification = this.notificationRepo.create({ userId, type, message });
+    const notification = this.notificationRepo.create({
+      userId,
+      type,
+      message,
+    });
     return this.notificationRepo.save(notification);
   }
 
   findAllForUser(userId: number) {
-    return this.notificationRepo.find({ where: { userId }, order: { createdAt: 'DESC' } });
+    return this.notificationRepo.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async markAsRead(id: number) {

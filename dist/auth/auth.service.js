@@ -81,16 +81,20 @@ let AuthService = class AuthService {
         }
         return `${destination.slice(0, 3)}${'*'.repeat(Math.max(destination.length - 5, 0))}${destination.slice(-2)}`;
     }
-    async findUserByPayload({ emailProfessionnel, telephone, canal }) {
+    async findUserByPayload({ emailProfessionnel, telephone, canal, }) {
         let user = null;
         if (canal === 'email' && emailProfessionnel) {
-            user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+            user = await this.usersRepository.findOne({
+                where: { emailProfessionnel },
+            });
         }
         if ((canal === 'sms' || canal === 'whatsapp') && telephone) {
             user = await this.usersRepository.findOne({ where: { telephone } });
         }
         if (!user && emailProfessionnel) {
-            user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+            user = await this.usersRepository.findOne({
+                where: { emailProfessionnel },
+            });
         }
         if (!user && telephone) {
             user = await this.usersRepository.findOne({ where: { telephone } });
@@ -107,7 +111,8 @@ let AuthService = class AuthService {
         const user = await this.findUserByPayload(payload);
         const now = Date.now();
         const storageKey = this.getStorageKey(purpose, user.id);
-        if (this.derniereDemandeCode[storageKey] && now - this.derniereDemandeCode[storageKey] < AuthService_1.DELAI_RESEND) {
+        if (this.derniereDemandeCode[storageKey] &&
+            now - this.derniereDemandeCode[storageKey] < AuthService_1.DELAI_RESEND) {
             throw new common_1.UnauthorizedException('Veuillez patienter avant de redemander un code');
         }
         const code = this.genererCode();
@@ -129,7 +134,9 @@ let AuthService = class AuthService {
             mode: delivery.mode,
         });
         return {
-            message: purpose === 'verification' ? 'Code de vérification envoyé.' : 'Code de réinitialisation envoyé.',
+            message: purpose === 'verification'
+                ? 'Code de vérification envoyé.'
+                : 'Code de réinitialisation envoyé.',
             canal: payload.canal,
             destination: this.maskDestination(destination),
             expiresInSeconds: AuthService_1.VALIDITE_CODE / 1000,
@@ -141,9 +148,13 @@ let AuthService = class AuthService {
     }
     async verifierCode(identifier, code) {
         const user = identifier.emailProfessionnel
-            ? await this.usersRepository.findOne({ where: { emailProfessionnel: identifier.emailProfessionnel } })
+            ? await this.usersRepository.findOne({
+                where: { emailProfessionnel: identifier.emailProfessionnel },
+            })
             : identifier.telephone
-                ? await this.usersRepository.findOne({ where: { telephone: identifier.telephone } })
+                ? await this.usersRepository.findOne({
+                    where: { telephone: identifier.telephone },
+                })
                 : null;
         if (!user)
             throw new common_1.UnauthorizedException('Utilisateur non trouvé');
@@ -165,9 +176,13 @@ let AuthService = class AuthService {
     }
     async resetMdp(payload) {
         const user = payload.emailProfessionnel
-            ? await this.usersRepository.findOne({ where: { emailProfessionnel: payload.emailProfessionnel } })
+            ? await this.usersRepository.findOne({
+                where: { emailProfessionnel: payload.emailProfessionnel },
+            })
             : payload.telephone
-                ? await this.usersRepository.findOne({ where: { telephone: payload.telephone } })
+                ? await this.usersRepository.findOne({
+                    where: { telephone: payload.telephone },
+                })
                 : null;
         if (!user)
             throw new common_1.UnauthorizedException('Utilisateur non trouvé');
@@ -190,10 +205,17 @@ let AuthService = class AuthService {
         return this.demanderResetMdp({ emailProfessionnel: email, canal: 'email' });
     }
     async resetPasswordWithToken(email, code, newPassword) {
-        return this.resetMdp({ emailProfessionnel: email, code, nouveauMotDePasse: newPassword, canal: 'email' });
+        return this.resetMdp({
+            emailProfessionnel: email,
+            code,
+            nouveauMotDePasse: newPassword,
+            canal: 'email',
+        });
     }
     async validateUser(emailProfessionnel, motDePasse) {
-        const user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+        const user = await this.usersRepository.findOne({
+            where: { emailProfessionnel },
+        });
         if (!user)
             return null;
         if (!user.isVerified) {
@@ -209,7 +231,11 @@ let AuthService = class AuthService {
         throw new common_1.NotImplementedException('Connexion Google requiert une intégration provider dédiée.');
     }
     async login(user) {
-        const payload = { emailProfessionnel: user.emailProfessionnel, sub: user.id, role: user.role };
+        const payload = {
+            emailProfessionnel: user.emailProfessionnel,
+            sub: user.id,
+            role: user.role,
+        };
         await this.auditLogService.log(user.id, 'login', 'User', String(user.id));
         return {
             access_token: this.jwtService.sign(payload),

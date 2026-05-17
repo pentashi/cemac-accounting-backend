@@ -91,7 +91,7 @@ let PartnerService = class PartnerService {
             const chunks = [];
             doc.text('Liste des clients');
             doc.text('---');
-            clients.forEach(c => {
+            clients.forEach((c) => {
                 doc.text(`${c.nom} | ${c.email} | ${c.telephone} | ${c.adresse} | ${c.numero_contribuable || ''}`);
             });
             doc.end();
@@ -100,12 +100,25 @@ let PartnerService = class PartnerService {
             buffer = Buffer.concat(chunks);
         }
         else if (format === 'excel') {
-            contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            contentType =
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
             const workbook = new ExcelJS.Workbook();
             const sheet = workbook.addWorksheet('Clients');
-            sheet.addRow(['Nom', 'Email', 'Téléphone', 'Adresse', 'Numéro Contribuable']);
-            clients.forEach(c => {
-                sheet.addRow([c.nom, c.email, c.telephone, c.adresse, c.numero_contribuable || '']);
+            sheet.addRow([
+                'Nom',
+                'Email',
+                'Téléphone',
+                'Adresse',
+                'Numéro Contribuable',
+            ]);
+            clients.forEach((c) => {
+                sheet.addRow([
+                    c.nom,
+                    c.email,
+                    c.telephone,
+                    c.adresse,
+                    c.numero_contribuable || '',
+                ]);
             });
             buffer = Buffer.from(await workbook.xlsx.writeBuffer());
         }
@@ -113,14 +126,20 @@ let PartnerService = class PartnerService {
             contentType = 'text/csv';
             const rows = [
                 ['Nom', 'Email', 'Téléphone', 'Adresse', 'Numéro Contribuable'],
-                ...clients.map(c => [c.nom, c.email, c.telephone, c.adresse, c.numero_contribuable || '']),
+                ...clients.map((c) => [
+                    c.nom,
+                    c.email,
+                    c.telephone,
+                    c.adresse,
+                    c.numero_contribuable || '',
+                ]),
             ];
             const csvChunks = [];
             const stream = (0, fast_csv_1.format)({ headers: false });
-            stream.on('data', chunk => csvChunks.push(Buffer.from(chunk)));
-            rows.forEach(row => stream.write(row));
+            stream.on('data', (chunk) => csvChunks.push(Buffer.from(chunk)));
+            rows.forEach((row) => stream.write(row));
             stream.end();
-            await new Promise(resolve => stream.on('end', resolve));
+            await new Promise((resolve) => stream.on('end', resolve));
             buffer = Buffer.concat(csvChunks);
         }
         else {
@@ -131,7 +150,10 @@ let PartnerService = class PartnerService {
     }
     async importClients(file, userId) {
         const content = file.buffer.toString();
-        const records = (0, sync_1.parse)(content, { columns: true, skip_empty_lines: true });
+        const records = (0, sync_1.parse)(content, {
+            columns: true,
+            skip_empty_lines: true,
+        });
         let count = 0;
         for (const recRaw of records) {
             const rec = recRaw;
@@ -188,7 +210,7 @@ let PartnerService = class PartnerService {
             const chunks = [];
             doc.text('Liste des fournisseurs');
             doc.text('---');
-            fournisseurs.forEach(f => {
+            fournisseurs.forEach((f) => {
                 doc.text(`${f.nom} | ${f.email} | ${f.telephone} | ${f.adresse} | ${f.numero_contribuable || ''}`);
             });
             doc.end();
@@ -197,12 +219,25 @@ let PartnerService = class PartnerService {
             buffer = Buffer.concat(chunks);
         }
         else if (format === 'excel') {
-            contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            contentType =
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
             const workbook = new ExcelJS.Workbook();
             const sheet = workbook.addWorksheet('Fournisseurs');
-            sheet.addRow(['Nom', 'Email', 'Téléphone', 'Adresse', 'Numéro Contribuable']);
-            fournisseurs.forEach(f => {
-                sheet.addRow([f.nom, f.email, f.telephone, f.adresse, f.numero_contribuable || '']);
+            sheet.addRow([
+                'Nom',
+                'Email',
+                'Téléphone',
+                'Adresse',
+                'Numéro Contribuable',
+            ]);
+            fournisseurs.forEach((f) => {
+                sheet.addRow([
+                    f.nom,
+                    f.email,
+                    f.telephone,
+                    f.adresse,
+                    f.numero_contribuable || '',
+                ]);
             });
             buffer = Buffer.from(await workbook.xlsx.writeBuffer());
         }
@@ -210,14 +245,20 @@ let PartnerService = class PartnerService {
             contentType = 'text/csv';
             const rows = [
                 ['Nom', 'Email', 'Téléphone', 'Adresse', 'Numéro Contribuable'],
-                ...fournisseurs.map(f => [f.nom, f.email, f.telephone, f.adresse, f.numero_contribuable || '']),
+                ...fournisseurs.map((f) => [
+                    f.nom,
+                    f.email,
+                    f.telephone,
+                    f.adresse,
+                    f.numero_contribuable || '',
+                ]),
             ];
             const csvChunks = [];
             const stream = (0, fast_csv_1.format)({ headers: false });
-            stream.on('data', chunk => csvChunks.push(Buffer.from(chunk)));
-            rows.forEach(row => stream.write(row));
+            stream.on('data', (chunk) => csvChunks.push(Buffer.from(chunk)));
+            rows.forEach((row) => stream.write(row));
             stream.end();
-            await new Promise(resolve => stream.on('end', resolve));
+            await new Promise((resolve) => stream.on('end', resolve));
             buffer = Buffer.concat(csvChunks);
         }
         else {
@@ -228,7 +269,10 @@ let PartnerService = class PartnerService {
     }
     async importFournisseurs(file, userId) {
         const content = file.buffer.toString();
-        const records = (0, sync_1.parse)(content, { columns: true, skip_empty_lines: true });
+        const records = (0, sync_1.parse)(content, {
+            columns: true,
+            skip_empty_lines: true,
+        });
         let count = 0;
         for (const recRaw of records) {
             const rec = recRaw;

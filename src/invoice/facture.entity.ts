@@ -50,6 +50,10 @@ export class Facture {
   @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
   solde_a_payer: number;
 
-  @Column({ type: 'enum', enum: ['brouillon', 'envoyee', 'reglee', 'impayee'], default: 'brouillon' })
+  @Column({
+    type: 'enum',
+    enum: ['brouillon', 'envoyee', 'reglee', 'impayee'],
+    default: 'brouillon',
+  })
   statut: 'brouillon' | 'envoyee' | 'reglee' | 'impayee';
 }

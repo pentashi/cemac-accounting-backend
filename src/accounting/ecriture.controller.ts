@@ -1,6 +1,23 @@
-
-import { Controller, Post, Get, Body, Query, Res, Req, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Query,
+  Res,
+  Req,
+  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { EcritureService } from './ecriture.service';
 import { CreateEcritureDto } from './ecriture.dto';
 import { Roles } from '../auth/roles.decorator';
@@ -41,12 +58,17 @@ export class EcritureController {
   async exportEntries(
     @Query('format') format: 'pdf' | 'excel' | 'csv' = 'pdf',
     @Res() res: Response,
-    @Req() req: any
+    @Req() req: any,
   ) {
-    const { buffer, filename, contentType } = await this.ecritureService.exportEntries(format);
+    const { buffer, filename, contentType } =
+      await this.ecritureService.exportEntries(format);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
-    await this.auditLogService.log(req.user?.id || 0, `export_ecriture_${format}`, 'EcritureComptable');
+    await this.auditLogService.log(
+      req.user?.id || 0,
+      `export_ecriture_${format}`,
+      'EcritureComptable',
+    );
     return res.send(buffer);
   }
 
@@ -54,7 +76,12 @@ export class EcritureController {
   @Roles('admin')
   @ApiOperation({ summary: 'Import accounting entries from CSV file' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FileInterceptor('file'))
   async importEntries(@UploadedFile() file: any, @Req() req: any) {
     return this.ecritureService.importEntries(file, req.user?.id || 0);

@@ -96,7 +96,11 @@ __decorate([
     __metadata("design:type", Number)
 ], Facture.prototype, "solde_a_payer", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'enum', enum: ['brouillon', 'envoyee', 'reglee', 'impayee'], default: 'brouillon' }),
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ['brouillon', 'envoyee', 'reglee', 'impayee'],
+        default: 'brouillon',
+    }),
     __metadata("design:type", String)
 ], Facture.prototype, "statut", void 0);
 exports.Facture = Facture = __decorate([
