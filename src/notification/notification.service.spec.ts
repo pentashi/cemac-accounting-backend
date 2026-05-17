@@ -29,38 +29,18 @@ describe('NotificationService', () => {
       read: false,
       createdAt: new Date(),
     };
-    service['notificationRepo'].create = jest
-      .fn()
-      .mockReturnValue(notification);
-    service['notificationRepo'].save = jest
-      .fn()
-      .mockResolvedValue(notification);
+    service['notificationRepo'].create = jest.fn().mockReturnValue(notification);
+    service['notificationRepo'].save = jest.fn().mockResolvedValue(notification);
     const result = await service.create(1, 'info', 'Test notification');
     expect(result).toMatchObject(notification);
   });
 
   it('should find all notifications for a user', async () => {
     const notifications = [
-      {
-        id: 1,
-        userId: 1,
-        type: 'info',
-        message: 'Test',
-        read: false,
-        createdAt: new Date(),
-      },
-      {
-        id: 2,
-        userId: 1,
-        type: 'alert',
-        message: 'Alert',
-        read: true,
-        createdAt: new Date(),
-      },
+      { id: 1, userId: 1, type: 'info', message: 'Test', read: false, createdAt: new Date() },
+      { id: 2, userId: 1, type: 'alert', message: 'Alert', read: true, createdAt: new Date() },
     ];
-    service['notificationRepo'].find = jest
-      .fn()
-      .mockResolvedValue(notifications);
+    service['notificationRepo'].find = jest.fn().mockResolvedValue(notifications);
     const result = await service.findAllForUser(1);
     expect(result).toEqual(notifications);
   });
@@ -68,9 +48,7 @@ describe('NotificationService', () => {
   it('should mark a notification as read', async () => {
     const notification = { id: 1, read: true };
     service['notificationRepo'].update = jest.fn().mockResolvedValue({});
-    service['notificationRepo'].findOneBy = jest
-      .fn()
-      .mockResolvedValue(notification);
+    service['notificationRepo'].findOneBy = jest.fn().mockResolvedValue(notification);
     const result = await service.markAsRead(1);
     expect(result).toMatchObject({ id: 1, read: true });
   });

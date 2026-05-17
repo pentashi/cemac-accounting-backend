@@ -1,23 +1,9 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Patch,
-  Delete,
-  UseGuards,
-  Req,
-  Put,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Req, Put } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import {
-  RequestPasswordResetDto,
-  ResetPasswordDto,
-} from './dto/password-reset.dto';
+import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { ApiBody } from '@nestjs/swagger';
@@ -58,6 +44,7 @@ export class UserController {
   remove(@Param('id') id: string) {
     return this.userService.remove(Number(id));
   }
+
 
   @Get('profile')
   @Roles('admin', 'user')

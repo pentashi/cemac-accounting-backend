@@ -23,19 +23,11 @@ let AuditLogService = class AuditLogService {
         this.auditLogRepository = auditLogRepository;
     }
     async log(userId, action, entity, entityId, details) {
-        const log = this.auditLogRepository.create({
-            userId,
-            action,
-            entity,
-            entityId,
-            details,
-        });
+        const log = this.auditLogRepository.create({ userId, action, entity, entityId, details });
         return this.auditLogRepository.save(log);
     }
     async findAll(filters = {}) {
-        const query = this.auditLogRepository
-            .createQueryBuilder('audit')
-            .orderBy('audit.createdAt', 'DESC');
+        const query = this.auditLogRepository.createQueryBuilder('audit').orderBy('audit.createdAt', 'DESC');
         if (filters.userId !== undefined) {
             query.andWhere('audit.userId = :userId', { userId: filters.userId });
         }
@@ -43,9 +35,7 @@ let AuditLogService = class AuditLogService {
             query.andWhere('audit.entity = :entity', { entity: filters.entity });
         }
         if (filters.entityId) {
-            query.andWhere('audit.entityId = :entityId', {
-                entityId: filters.entityId,
-            });
+            query.andWhere('audit.entityId = :entityId', { entityId: filters.entityId });
         }
         if (filters.action) {
             query.andWhere('audit.action = :action', { action: filters.action });
@@ -59,9 +49,7 @@ let AuditLogService = class AuditLogService {
         return query.getMany();
     }
     findOne(id) {
-        return this.auditLogRepository.findOneBy({
-            id,
-        });
+        return this.auditLogRepository.findOneBy({ id });
     }
     findForUser(userId, filters = {}) {
         return this.findAll({ ...filters, userId });

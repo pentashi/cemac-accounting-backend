@@ -23,18 +23,11 @@ let NotificationService = class NotificationService {
         this.notificationRepo = notificationRepo;
     }
     async create(userId, type, message) {
-        const notification = this.notificationRepo.create({
-            userId,
-            type,
-            message,
-        });
+        const notification = this.notificationRepo.create({ userId, type, message });
         return this.notificationRepo.save(notification);
     }
     findAllForUser(userId) {
-        return this.notificationRepo.find({
-            where: { userId },
-            order: { createdAt: 'DESC' },
-        });
+        return this.notificationRepo.find({ where: { userId }, order: { createdAt: 'DESC' } });
     }
     async markAsRead(id) {
         await this.notificationRepo.update(id, { read: true });

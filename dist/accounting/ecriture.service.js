@@ -65,7 +65,7 @@ let EcritureService = class EcritureService {
     async exportEntries(format) {
         const entries = await this.ecritureRepo.find();
         let buffer;
-        const filename = `ecritures.${format}`;
+        let filename = `ecritures.${format}`;
         let contentType = 'application/octet-stream';
         if (format === 'pdf') {
             contentType = 'application/pdf';
@@ -73,7 +73,7 @@ let EcritureService = class EcritureService {
             const chunks = [];
             doc.text('Liste des écritures comptables');
             doc.text('---');
-            entries.forEach((e) => {
+            entries.forEach(e => {
                 doc.text(`${e.date_ecriture} | ${e.compte_numero} | ${e.compte_intitule} | Débit: ${e.debit} | Crédit: ${e.credit}`);
             });
             doc.end();
@@ -82,19 +82,12 @@ let EcritureService = class EcritureService {
             buffer = Buffer.concat(chunks);
         }
         else if (format === 'excel') {
-            contentType =
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
             const workbook = new ExcelJS.Workbook();
             const sheet = workbook.addWorksheet('Ecritures');
             sheet.addRow(['Date', 'Compte', 'Intitulé', 'Débit', 'Crédit']);
-            entries.forEach((e) => {
-                sheet.addRow([
-                    e.date_ecriture,
-                    e.compte_numero,
-                    e.compte_intitule,
-                    e.debit,
-                    e.credit,
-                ]);
+            entries.forEach(e => {
+                sheet.addRow([e.date_ecriture, e.compte_numero, e.compte_intitule, e.debit, e.credit]);
             });
             buffer = Buffer.from(await workbook.xlsx.writeBuffer());
         }
@@ -102,20 +95,14 @@ let EcritureService = class EcritureService {
             contentType = 'text/csv';
             const rows = [
                 ['Date', 'Compte', 'Intitulé', 'Débit', 'Crédit'],
-                ...entries.map((e) => [
-                    e.date_ecriture,
-                    e.compte_numero,
-                    e.compte_intitule,
-                    e.debit,
-                    e.credit,
-                ]),
+                ...entries.map(e => [e.date_ecriture, e.compte_numero, e.compte_intitule, e.debit, e.credit]),
             ];
             const csvChunks = [];
             const stream = (0, fast_csv_1.format)({ headers: false });
-            stream.on('data', (chunk) => csvChunks.push(Buffer.from(chunk)));
-            rows.forEach((row) => stream.write(row));
+            stream.on('data', chunk => csvChunks.push(Buffer.from(chunk)));
+            rows.forEach(row => stream.write(row));
             stream.end();
-            await new Promise((resolve) => stream.on('end', resolve));
+            await new Promise(resolve => stream.on('end', resolve));
             buffer = Buffer.concat(csvChunks);
         }
         else {
@@ -125,10 +112,7 @@ let EcritureService = class EcritureService {
     }
     async importEntries(file, userId) {
         const content = file.buffer.toString();
-        const records = (0, sync_1.parse)(content, {
-            columns: true,
-            skip_empty_lines: true,
-        });
+        const records = (0, sync_1.parse)(content, { columns: true, skip_empty_lines: true });
         let count = 0;
         for (const recRaw of records) {
             const rec = recRaw;
@@ -197,14 +181,9 @@ let EcritureService = class EcritureService {
             }
             balance[entry.compte_numero].debit += Number(entry.debit);
             balance[entry.compte_numero].credit += Number(entry.credit);
-            balance[entry.compte_numero].solde =
-                balance[entry.compte_numero].debit -
-                    balance[entry.compte_numero].credit;
+            balance[entry.compte_numero].solde = balance[entry.compte_numero].debit - balance[entry.compte_numero].credit;
         }
-        return Object.entries(balance).map(([compte_numero, data]) => ({
-            compte_numero,
-            ...data,
-        }));
+        return Object.entries(balance).map(([compte_numero, data]) => ({ compte_numero, ...data }));
     }
     findAll() {
         return this.ecritureRepo.find();

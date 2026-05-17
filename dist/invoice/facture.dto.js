@@ -24,10 +24,7 @@ __decorate([
     __metadata("design:type", String)
 ], LigneFactureDto.prototype, "numeroProduit", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Intitulé du produit',
-        example: 'Ordinateur portable',
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'Intitulé du produit', example: 'Ordinateur portable' }),
     __metadata("design:type", String)
 ], LigneFactureDto.prototype, "intitule", void 0);
 __decorate([
@@ -71,19 +68,11 @@ __decorate([
     __metadata("design:type", String)
 ], FactureCalculDto.prototype, "typeVente", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        type: RemiseDto,
-        required: false,
-        description: 'Remise appliquée',
-    }),
+    (0, swagger_1.ApiProperty)({ type: RemiseDto, required: false, description: 'Remise appliquée' }),
     __metadata("design:type", RemiseDto)
 ], FactureCalculDto.prototype, "remise", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Acompte versé',
-        example: 50000,
-        required: false,
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'Acompte versé', example: 50000, required: false }),
     __metadata("design:type", Number)
 ], FactureCalculDto.prototype, "acompte", void 0);
 class CreateFactureDto extends FactureCalculDto {
@@ -111,11 +100,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateFactureDto.prototype, "dateEcheance", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Statut initial',
-        enum: ['brouillon', 'envoyee', 'reglee', 'impayee'],
-        required: false,
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'Statut initial', enum: ['brouillon', 'envoyee', 'reglee', 'impayee'], required: false }),
     __metadata("design:type", String)
 ], CreateFactureDto.prototype, "statut", void 0);
 class UpdateFactureDto {
@@ -148,10 +133,7 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateFactureDto.prototype, "dateEcheance", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        required: false,
-        enum: ['brouillon', 'envoyee', 'reglee', 'impayee'],
-    }),
+    (0, swagger_1.ApiProperty)({ required: false, enum: ['brouillon', 'envoyee', 'reglee', 'impayee'] }),
     __metadata("design:type", String)
 ], UpdateFactureDto.prototype, "statut", void 0);
 class UpdateFactureStatusDto {
@@ -184,11 +166,7 @@ __decorate([
     __metadata("design:type", String)
 ], RegisterInvoicePaymentDto.prototype, "datePaiement", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Référence du paiement',
-        example: 'TRX-001',
-        required: false,
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'Référence du paiement', example: 'TRX-001', required: false }),
     __metadata("design:type", String)
 ], RegisterInvoicePaymentDto.prototype, "reference", void 0);
 __decorate([

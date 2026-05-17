@@ -32,41 +32,21 @@ describe('AuditLogService', () => {
     };
     service['auditLogRepository'].create = jest.fn().mockReturnValue(logEntry);
     service['auditLogRepository'].save = jest.fn().mockResolvedValue(logEntry);
-    const result = await service.log(1, 'create_user', 'User', '1', {
-      username: 'testuser',
-    });
+    const result = await service.log(1, 'create_user', 'User', '1', { username: 'testuser' });
     expect(result).toMatchObject(logEntry);
   });
 
   it('should find all logs', async () => {
     const logs = [
-      {
-        id: 1,
-        userId: 1,
-        action: 'create_user',
-        entity: 'User',
-        entityId: '1',
-        details: {},
-        createdAt: new Date(),
-      },
-      {
-        id: 2,
-        userId: 2,
-        action: 'delete_client',
-        entity: 'Client',
-        entityId: '2',
-        details: {},
-        createdAt: new Date(),
-      },
+      { id: 1, userId: 1, action: 'create_user', entity: 'User', entityId: '1', details: {}, createdAt: new Date() },
+      { id: 2, userId: 2, action: 'delete_client', entity: 'Client', entityId: '2', details: {}, createdAt: new Date() },
     ];
     const mockQuery = {
       orderBy: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       getMany: jest.fn().mockResolvedValue(logs),
     };
-    service['auditLogRepository'].createQueryBuilder = jest
-      .fn()
-      .mockReturnValue(mockQuery);
+    service['auditLogRepository'].createQueryBuilder = jest.fn().mockReturnValue(mockQuery);
     const result = await service.findAll();
     expect(result).toEqual(logs);
   });

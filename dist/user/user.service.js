@@ -71,9 +71,7 @@ let UserService = class UserService {
         }
         await this.userRepository.update(id, filteredUpdate);
         const updated = await this.userRepository.findOneBy({ id });
-        await this.auditLogService.log(id, 'update_user', 'User', String(id), {
-            updateUserDto: filteredUpdate,
-        });
+        await this.auditLogService.log(id, 'update_user', 'User', String(id), { updateUserDto: filteredUpdate });
         return updated;
     }
     async remove(id) {

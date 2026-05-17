@@ -23,14 +23,11 @@ class CreateEcritureDto {
 }
 exports.CreateEcritureDto = CreateEcritureDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: "Date de l'écriture", example: '2024-06-01' }),
+    (0, swagger_1.ApiProperty)({ description: 'Date de l\'écriture', example: '2024-06-01' }),
     __metadata("design:type", String)
 ], CreateEcritureDto.prototype, "date_ecriture", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: "Libellé de l'écriture",
-        example: 'Achat de fournitures',
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'Libellé de l\'écriture', example: 'Achat de fournitures' }),
     __metadata("design:type", String)
 ], CreateEcritureDto.prototype, "libelle", void 0);
 __decorate([
@@ -38,10 +35,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateEcritureDto.prototype, "compte_numero", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Intitulé du compte',
-        example: 'Achats de matières premières',
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'Intitulé du compte', example: 'Achats de matières premières' }),
     __metadata("design:type", String)
 ], CreateEcritureDto.prototype, "compte_intitule", void 0);
 __decorate([
@@ -53,19 +47,11 @@ __decorate([
     __metadata("design:type", Number)
 ], CreateEcritureDto.prototype, "credit", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Référence de la pièce',
-        example: 'FAC-2024-001',
-        required: false,
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'Référence de la pièce', example: 'FAC-2024-001', required: false }),
     __metadata("design:type", String)
 ], CreateEcritureDto.prototype, "reference", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Nom du fichier de la pièce jointe',
-        example: 'facture.pdf',
-        required: false,
-    }),
+    (0, swagger_1.ApiProperty)({ description: 'Nom du fichier de la pièce jointe', example: 'facture.pdf', required: false }),
     __metadata("design:type", String)
 ], CreateEcritureDto.prototype, "piece", void 0);
 //# sourceMappingURL=ecriture.dto.js.map
