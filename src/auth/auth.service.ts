@@ -200,7 +200,15 @@ export class AuthService {
     };
   }
 
-  async register(raisonSociale: string, emailProfessionnel: string, telephone: string, motDePasse: string, confirmerMotDePasse: string, role: 'admin' | 'user' = 'user') {
+  async register(
+    raisonSociale: string,
+    emailProfessionnel: string,
+    telephone: string,
+    motDePasse: string,
+    confirmerMotDePasse: string,
+    role: 'admin' | 'user' = 'user',
+    canal: DeliveryChannel = 'email',
+  ) {
     if (motDePasse !== confirmerMotDePasse) {
       throw new UnauthorizedException('Les mots de passe ne correspondent pas');
     }
@@ -214,6 +222,14 @@ export class AuthService {
     });
     await this.usersRepository.save(user);
     await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
+    await this.requestCode(
+      {
+        emailProfessionnel: user.emailProfessionnel,
+        telephone: user.telephone,
+        canal,
+      },
+      'verification',
+    );
     return user;
   }
 }

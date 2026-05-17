@@ -42,6 +42,7 @@ export class AuthController {
       createUserDto.motDePasse,
       createUserDto.confirmerMotDePasse,
       createUserDto.role,
+      createUserDto.canal,
     );
   }
 
