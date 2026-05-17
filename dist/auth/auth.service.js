@@ -215,7 +215,7 @@ let AuthService = class AuthService {
             access_token: this.jwtService.sign(payload),
         };
     }
-    async register(raisonSociale, emailProfessionnel, telephone, motDePasse, confirmerMotDePasse, role = 'user', canal = 'email') {
+    async register(raisonSociale, emailProfessionnel, telephone, motDePasse, confirmerMotDePasse, role = 'user') {
         if (motDePasse !== confirmerMotDePasse) {
             throw new common_1.UnauthorizedException('Les mots de passe ne correspondent pas');
         }
@@ -229,11 +229,6 @@ let AuthService = class AuthService {
         });
         await this.usersRepository.save(user);
         await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
-        await this.requestCode({
-            emailProfessionnel: user.emailProfessionnel,
-            telephone: user.telephone,
-            canal,
-        }, 'verification');
         return user;
     }
 };

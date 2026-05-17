@@ -18,7 +18,6 @@ class CreateUserDto {
     motDePasse;
     confirmerMotDePasse;
     role;
-    canal;
 }
 exports.CreateUserDto = CreateUserDto;
 __decorate([
@@ -45,13 +44,4 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Rôle', example: 'user', required: false, enum: ['admin', 'user'] }),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "role", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Canal pour envoyer le code de vérification après inscription',
-        example: 'email',
-        required: false,
-        enum: ['email', 'whatsapp', 'sms'],
-    }),
-    __metadata("design:type", String)
-], CreateUserDto.prototype, "canal", void 0);
 //# sourceMappingURL=create-user.dto.js.map

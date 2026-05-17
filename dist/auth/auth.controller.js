@@ -31,7 +31,7 @@ let AuthController = class AuthController {
         return this.authService.login(user);
     }
     async register(createUserDto) {
-        return this.authService.register(createUserDto.raisonSociale, createUserDto.emailProfessionnel, createUserDto.telephone, createUserDto.motDePasse, createUserDto.confirmerMotDePasse, createUserDto.role, createUserDto.canal);
+        return this.authService.register(createUserDto.raisonSociale, createUserDto.emailProfessionnel, createUserDto.telephone, createUserDto.motDePasse, createUserDto.confirmerMotDePasse, createUserDto.role);
     }
     async getProfile(req) {
         return req.user;

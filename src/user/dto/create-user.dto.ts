@@ -18,12 +18,4 @@ export class CreateUserDto {
 
   @ApiProperty({ description: 'Rôle', example: 'user', required: false, enum: ['admin', 'user'] })
   role?: 'admin' | 'user';
-
-  @ApiProperty({
-    description: 'Canal pour envoyer le code de vérification après inscription',
-    example: 'email',
-    required: false,
-    enum: ['email', 'whatsapp', 'sms'],
-  })
-  canal?: 'email' | 'whatsapp' | 'sms';
 }
