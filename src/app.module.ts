@@ -35,10 +35,14 @@ import { SettingsModule } from './settings/settings.module';
           : nodeEnv !== 'production';
 
         const dbHost = config.get<string>('DB_HOST');
-        const dbPort = parseInt(
+        const dbPortCandidate = parseInt(
           config.get<string>('DB_PORT') ?? String(defaultDbPort),
           10,
         );
+        if (Number.isNaN(dbPortCandidate)) {
+          throw new Error('DB_PORT must be a valid number.');
+        }
+        const dbPort = dbPortCandidate;
         const dbUser = config.get<string>('DB_USER');
         const dbPassword = config.get<string>('DB_PASSWORD');
         const dbName = config.get<string>('DB_NAME');

@@ -26,11 +26,11 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
     smtpTransporter;
     smtpFrom;
     determineSmtpSecure(secureValue, port) {
-        const normalizedValue = secureValue?.trim().toLowerCase();
-        if (!normalizedValue) {
+        const normalizedSecureValue = secureValue?.trim().toLowerCase();
+        if (!normalizedSecureValue) {
             return port === 465;
         }
-        return ['true', '1', 'yes', 'on'].includes(normalizedValue);
+        return ['true', '1', 'yes', 'on'].includes(normalizedSecureValue);
     }
     constructor(configService) {
         this.configService = configService;
@@ -52,8 +52,8 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         const smtpPassword = this.configService.get('MAIL_PASSWORD') ??
             this.configService.get('EMAIL_PASSWORD') ??
             this.configService.get('SMTP_PASS');
-        const parsedSmtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : NaN;
-        const smtpPort = Number.isNaN(parsedSmtpPort) ? 587 : parsedSmtpPort;
+        const smtpPortCandidate = smtpPortValue ? parseInt(smtpPortValue, 10) : 587;
+        const smtpPort = Number.isNaN(smtpPortCandidate) ? 587 : smtpPortCandidate;
         const smtpSecureRaw = this.configService.get('MAIL_SECURE') ??
             this.configService.get('SMTP_SECURE');
         const smtpSecure = this.determineSmtpSecure(smtpSecureRaw, smtpPort);

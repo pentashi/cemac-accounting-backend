@@ -66,12 +66,12 @@ export class AuthMessageService {
     secureValue: string | undefined,
     port: number,
   ): boolean {
-    const normalizedValue = secureValue?.trim().toLowerCase();
-    if (!normalizedValue) {
+    const normalizedSecureValue = secureValue?.trim().toLowerCase();
+    if (!normalizedSecureValue) {
       return port === 465;
     }
 
-    return ['true', '1', 'yes', 'on'].includes(normalizedValue);
+    return ['true', '1', 'yes', 'on'].includes(normalizedSecureValue);
   }
 
   constructor(private readonly configService: ConfigService) {
@@ -100,8 +100,8 @@ export class AuthMessageService {
       this.configService.get<string>('MAIL_PASSWORD') ??
       this.configService.get<string>('EMAIL_PASSWORD') ??
       this.configService.get<string>('SMTP_PASS');
-    const parsedSmtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : NaN;
-    const smtpPort = Number.isNaN(parsedSmtpPort) ? 587 : parsedSmtpPort;
+    const smtpPortCandidate = smtpPortValue ? parseInt(smtpPortValue, 10) : 587;
+    const smtpPort = Number.isNaN(smtpPortCandidate) ? 587 : smtpPortCandidate;
     const smtpSecureRaw =
       this.configService.get<string>('MAIL_SECURE') ??
       this.configService.get<string>('SMTP_SECURE');

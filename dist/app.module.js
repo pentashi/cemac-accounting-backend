@@ -41,7 +41,11 @@ exports.AppModule = AppModule = __decorate([
                         ? ['true', '1', 'yes', 'on'].includes(syncOverride)
                         : nodeEnv !== 'production';
                     const dbHost = config.get('DB_HOST');
-                    const dbPort = parseInt(config.get('DB_PORT') ?? String(defaultDbPort), 10);
+                    const dbPortCandidate = parseInt(config.get('DB_PORT') ?? String(defaultDbPort), 10);
+                    if (Number.isNaN(dbPortCandidate)) {
+                        throw new Error('DB_PORT must be a valid number.');
+                    }
+                    const dbPort = dbPortCandidate;
                     const dbUser = config.get('DB_USER');
                     const dbPassword = config.get('DB_PASSWORD');
                     const dbName = config.get('DB_NAME');
