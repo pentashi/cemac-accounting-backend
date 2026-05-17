@@ -27,13 +27,16 @@ let EncryptionService = class EncryptionService {
         this.algorithm =
             this.configService.get('OTP_ENCRYPTION_ALGORITHM') ?? 'aes-256-gcm';
         const configuredKey = this.configService.get('OTP_ENCRYPTION_KEY');
-        if (!configuredKey) {
-            throw new Error('OTP_ENCRYPTION_KEY is required');
-        }
-        if (!/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
+        if (configuredKey && !/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
             throw new Error('OTP_ENCRYPTION_KEY must be a 64-character hexadecimal string');
         }
-        this.encryptionKey = configuredKey;
+        const fallbackSecret = this.configService.get('JWT_SECRET');
+        if (!configuredKey && !fallbackSecret) {
+            throw new Error('OTP_ENCRYPTION_KEY or JWT_SECRET is required');
+        }
+        this.encryptionKey =
+            configuredKey ??
+                (0, crypto_1.createHash)('sha256').update(fallbackSecret).digest('hex');
         this.ivLength = Number.parseInt(this.configService.get('OTP_IV_LENGTH') ?? '16', 10);
         this.saltLength = Number.parseInt(this.configService.get('OTP_SALT_LENGTH') ?? '64', 10);
         this.tagLength = Number.parseInt(this.configService.get('OTP_TAG_LENGTH') ?? '16', 10);

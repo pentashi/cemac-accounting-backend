@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 import { EncryptionService } from './encryption.service';
 
-function createConfigService(config: Record<string, string | undefined>) {
+function createMockConfigService(config: Record<string, string | undefined>) {
   return {
     get: jest.fn((key: string) => config[key]),
   } as unknown as ConfigService;
@@ -12,7 +12,7 @@ describe('EncryptionService', () => {
   it('uses OTP_ENCRYPTION_KEY when provided', () => {
     const otpKey = 'a'.repeat(64);
     const service = new EncryptionService(
-      createConfigService({
+      createMockConfigService({
         OTP_ENCRYPTION_KEY: otpKey,
         JWT_SECRET: 'jwt-secret',
       }),
@@ -27,7 +27,7 @@ describe('EncryptionService', () => {
     const jwtSecret = 'my-jwt-secret';
     const expectedKey = createHash('sha256').update(jwtSecret).digest('hex');
     const service = new EncryptionService(
-      createConfigService({
+      createMockConfigService({
         JWT_SECRET: jwtSecret,
       }),
     );
@@ -42,7 +42,7 @@ describe('EncryptionService', () => {
     expect(
       () =>
         new EncryptionService(
-          createConfigService({
+          createMockConfigService({
             OTP_ENCRYPTION_KEY: 'invalid',
           }),
         ),
@@ -50,7 +50,7 @@ describe('EncryptionService', () => {
   });
 
   it('throws when neither OTP_ENCRYPTION_KEY nor JWT_SECRET is set', () => {
-    expect(() => new EncryptionService(createConfigService({}))).toThrow(
+    expect(() => new EncryptionService(createMockConfigService({}))).toThrow(
       'OTP_ENCRYPTION_KEY or JWT_SECRET is required',
     );
   });

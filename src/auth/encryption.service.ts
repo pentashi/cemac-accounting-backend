@@ -35,7 +35,7 @@ export class EncryptionService {
     }
     this.encryptionKey =
       configuredKey ??
-      createHash('sha256').update(fallbackSecret ?? '').digest('hex');
+      createHash('sha256').update(fallbackSecret!).digest('hex');
     this.ivLength = Number.parseInt(
       this.configService.get<string>('OTP_IV_LENGTH') ?? '16',
       10,
