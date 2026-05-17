@@ -18,7 +18,6 @@ let EncryptionService = class EncryptionService {
     static { EncryptionService_1 = this; }
     configService;
     logger = new common_1.Logger(EncryptionService_1.name);
-    static defaultFallbackSalt = 'cemac-accounting-backend:otp-fallback';
     static fallbackIterations = 600000;
     algorithm;
     encryptionKey;
@@ -36,13 +35,14 @@ let EncryptionService = class EncryptionService {
             throw new Error('OTP_ENCRYPTION_KEY must be a 64-character hexadecimal string');
         }
         const fallbackSecret = this.configService.get('JWT_SECRET');
-        const fallbackSalt = this.configService.get('OTP_ENCRYPTION_FALLBACK_SALT') ??
-            this.configService.get('DB_NAME') ??
-            EncryptionService_1.defaultFallbackSalt;
         if (configuredKey) {
             this.encryptionKey = configuredKey;
         }
         else if (fallbackSecret) {
+            const fallbackSalt = this.configService.get('OTP_ENCRYPTION_FALLBACK_SALT') ??
+                (0, crypto_1.createHash)('sha256')
+                    .update(`otp-encryption-fallback-salt:${fallbackSecret}`)
+                    .digest('hex');
             this.logger.warn('OTP_ENCRYPTION_KEY is not set; deriving OTP encryption key from JWT_SECRET. Configure OTP_ENCRYPTION_KEY in production to avoid secret coupling.');
             this.encryptionKey = (0, crypto_1.pbkdf2Sync)(fallbackSecret, fallbackSalt, EncryptionService_1.fallbackIterations, 32, 'sha512').toString('hex');
         }
