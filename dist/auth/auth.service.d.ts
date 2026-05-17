@@ -64,6 +64,6 @@ export declare class AuthService {
     login(user: User): Promise<{
         access_token: string;
     }>;
-    register(raisonSociale: string, emailProfessionnel: string, telephone: string, motDePasse: string, confirmerMotDePasse: string, role?: 'admin' | 'user'): Promise<User>;
+    register(raisonSociale: string, emailProfessionnel: string, telephone: string, motDePasse: string, confirmerMotDePasse: string, role?: 'admin' | 'user', canal?: DeliveryChannel): Promise<User>;
 }
 export {};

@@ -5,4 +5,5 @@ export declare class CreateUserDto {
     motDePasse: string;
     confirmerMotDePasse: string;
     role?: 'admin' | 'user';
+    canal?: 'email' | 'whatsapp' | 'sms';
 }
