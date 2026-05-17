@@ -25,6 +25,13 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
     resendFrom;
     smtpTransporter;
     smtpFrom;
+    determineSmtpSecure(secureValue, port) {
+        const normalizedValue = secureValue?.trim().toLowerCase();
+        if (!normalizedValue) {
+            return port === 465;
+        }
+        return ['true', '1', 'yes', 'on'].includes(normalizedValue);
+    }
     constructor(configService) {
         this.configService = configService;
         const accountSid = this.configService.get('TWILIO_ACCOUNT_SID');
@@ -48,14 +55,12 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         const smtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : undefined;
         const smtpSecureRaw = this.configService.get('MAIL_SECURE') ??
             this.configService.get('SMTP_SECURE');
-        const smtpSecureNormalized = smtpSecureRaw?.trim().toLowerCase();
-        const smtpSecure = smtpSecureNormalized
-            ? ['true', '1', 'yes', 'on'].includes(smtpSecureNormalized)
-            : (smtpPort ?? 587) === 465;
+        const smtpSecure = this.determineSmtpSecure(smtpSecureRaw, smtpPort ?? 587);
         this.smtpFrom =
             this.configService.get('MAIL_FROM_ADDRESS') ??
                 this.configService.get('SMTP_FROM') ??
-                this.resendFrom;
+                smtpUser ??
+                'noreply@localhost';
         if (smtpHost && smtpPort && smtpUser && smtpPassword) {
             try {
                 const smtpModule = require('nodemailer');

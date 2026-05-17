@@ -51,7 +51,7 @@ import { SettingsModule } from './settings/settings.module';
 
           if (!database) {
             throw new Error(
-              'DATABASE_URL must include a database name or DB_NAME must be set.',
+              'Database name is required. Either include it in DATABASE_URL or set DB_NAME environment variable.',
             );
           }
           return {

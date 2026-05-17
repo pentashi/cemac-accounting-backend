@@ -17,6 +17,7 @@ export declare class AuthMessageService {
     private readonly resendFrom;
     private readonly smtpTransporter;
     private readonly smtpFrom;
+    private determineSmtpSecure;
     constructor(configService: ConfigService);
     private getTwilioClient;
     sendCode(channel: DeliveryChannel, destination: string, code: string, purpose: DeliveryPurpose): Promise<DeliveryResult>;

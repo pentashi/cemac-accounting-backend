@@ -62,6 +62,18 @@ export class AuthMessageService {
   private readonly smtpTransporter: SmtpTransporter | null;
   private readonly smtpFrom: string;
 
+  private determineSmtpSecure(
+    secureValue: string | undefined,
+    port: number,
+  ): boolean {
+    const normalizedValue = secureValue?.trim().toLowerCase();
+    if (!normalizedValue) {
+      return port === 465;
+    }
+
+    return ['true', '1', 'yes', 'on'].includes(normalizedValue);
+  }
+
   constructor(private readonly configService: ConfigService) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
@@ -92,15 +104,13 @@ export class AuthMessageService {
     const smtpSecureRaw =
       this.configService.get<string>('MAIL_SECURE') ??
       this.configService.get<string>('SMTP_SECURE');
-    const smtpSecureNormalized = smtpSecureRaw?.trim().toLowerCase();
-    const smtpSecure = smtpSecureNormalized
-      ? ['true', '1', 'yes', 'on'].includes(smtpSecureNormalized)
-      : (smtpPort ?? 587) === 465;
+    const smtpSecure = this.determineSmtpSecure(smtpSecureRaw, smtpPort ?? 587);
 
     this.smtpFrom =
       this.configService.get<string>('MAIL_FROM_ADDRESS') ??
       this.configService.get<string>('SMTP_FROM') ??
-      this.resendFrom;
+      smtpUser ??
+      'noreply@localhost';
 
     if (smtpHost && smtpPort && smtpUser && smtpPassword) {
       try {

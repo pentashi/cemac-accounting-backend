@@ -52,7 +52,7 @@ exports.AppModule = AppModule = __decorate([
                         const parsedDatabaseName = decodeURIComponent(parsedUrl.pathname.replace(/^\//, ''));
                         const database = parsedDatabaseName || dbName;
                         if (!database) {
-                            throw new Error('DATABASE_URL must include a database name or DB_NAME must be set.');
+                            throw new Error('Database name is required. Either include it in DATABASE_URL or set DB_NAME environment variable.');
                         }
                         return {
                             type: 'postgres',
