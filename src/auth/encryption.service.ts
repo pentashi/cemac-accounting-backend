@@ -22,9 +22,16 @@ export class EncryptionService {
   constructor(private readonly configService: ConfigService) {
     this.algorithm =
       this.configService.get<string>('OTP_ENCRYPTION_ALGORITHM') ?? 'aes-256-gcm';
-    this.encryptionKey =
-      this.configService.get<string>('OTP_ENCRYPTION_KEY') ??
-      '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    const configuredKey = this.configService.get<string>('OTP_ENCRYPTION_KEY');
+    if (!configuredKey) {
+      throw new Error('OTP_ENCRYPTION_KEY is required');
+    }
+    if (!/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
+      throw new Error(
+        'OTP_ENCRYPTION_KEY must be a 64-character hexadecimal string',
+      );
+    }
+    this.encryptionKey = configuredKey;
     this.ivLength = Number.parseInt(
       this.configService.get<string>('OTP_IV_LENGTH') ?? '16',
       10,

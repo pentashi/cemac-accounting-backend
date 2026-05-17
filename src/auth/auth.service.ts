@@ -9,7 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import { AuthMessageService, DeliveryChannel } from './auth-message.service';
 import { RedisService } from '../redis/redis.service';
 import { EncryptionService } from './encryption.service';
-import { timingSafeEqual } from 'crypto';
+import { createHash, timingSafeEqual } from 'crypto';
 
 interface CodeRequestPayload {
   emailProfessionnel?: string;
@@ -129,14 +129,9 @@ export class AuthService {
   }
 
   private compareCodes(expectedCode: string, incomingCode: string): boolean {
-    const expectedBuffer = Buffer.from(expectedCode, 'utf8');
-    const incomingBuffer = Buffer.from(incomingCode, 'utf8');
-
-    if (expectedBuffer.length !== incomingBuffer.length) {
-      return false;
-    }
-
-    return timingSafeEqual(expectedBuffer, incomingBuffer);
+    const expectedDigest = createHash('sha256').update(expectedCode).digest();
+    const incomingDigest = createHash('sha256').update(incomingCode).digest();
+    return timingSafeEqual(expectedDigest, incomingDigest);
   }
 
   private async requestCode(payload: CodeRequestPayload, purpose: CodePurpose) {

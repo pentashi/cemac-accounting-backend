@@ -30,7 +30,10 @@ async function sendPasswordResetEmail(email, token) {
             : undefined,
     });
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
-    const fromAddress = process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || 'no-reply@example.com';
+    const fromAddress = process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME;
+    if (!fromAddress) {
+        return;
+    }
     const from = process.env.MAIL_FROM_NAME
         ? `${process.env.MAIL_FROM_NAME} <${fromAddress}>`
         : fromAddress;

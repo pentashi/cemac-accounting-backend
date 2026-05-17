@@ -69,7 +69,11 @@ let RedisService = class RedisService {
             this.fallbackSet(key, value, ttl);
             return;
         }
-        await this.redisClient.set(key, value, 'EX', ttl);
+        if (ttl > 0) {
+            await this.redisClient.set(key, value, 'EX', ttl);
+            return;
+        }
+        await this.redisClient.set(key, value);
     }
     async get(key) {
         if (!this.redisClient) {
@@ -86,7 +90,8 @@ let RedisService = class RedisService {
     }
     async incr(key) {
         if (!this.redisClient) {
-            const value = Number.parseInt(this.fallbackGet(key) ?? '0', 10) + 1;
+            const current = Number.parseInt(this.fallbackGet(key) ?? '0', 10);
+            const value = (Number.isFinite(current) ? current : 0) + 1;
             const existing = this.fallbackStore.get(key);
             this.fallbackStore.set(key, {
                 value: value.toString(),

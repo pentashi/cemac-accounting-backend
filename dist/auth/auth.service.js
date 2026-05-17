@@ -138,12 +138,9 @@ let AuthService = class AuthService {
         return user;
     }
     compareCodes(expectedCode, incomingCode) {
-        const expectedBuffer = Buffer.from(expectedCode, 'utf8');
-        const incomingBuffer = Buffer.from(incomingCode, 'utf8');
-        if (expectedBuffer.length !== incomingBuffer.length) {
-            return false;
-        }
-        return (0, crypto_1.timingSafeEqual)(expectedBuffer, incomingBuffer);
+        const expectedDigest = (0, crypto_1.createHash)('sha256').update(expectedCode).digest();
+        const incomingDigest = (0, crypto_1.createHash)('sha256').update(incomingCode).digest();
+        return (0, crypto_1.timingSafeEqual)(expectedDigest, incomingDigest);
     }
     async requestCode(payload, purpose) {
         const user = await this.findUserByPayload(payload);

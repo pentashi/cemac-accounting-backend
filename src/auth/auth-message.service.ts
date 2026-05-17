@@ -68,9 +68,11 @@ export class AuthMessageService {
       this.configService.get<string>('MAIL_USERNAME') ??
       '';
 
-    this.smtpFrom = fromName
-      ? `${fromName} <${fromAddress}>`
-      : fromAddress || 'no-reply@example.com';
+    this.smtpFrom = fromAddress
+      ? fromName
+        ? `${fromName} <${fromAddress}>`
+        : fromAddress
+      : '';
     this.smtpTransporter =
       host && Number.isFinite(port)
         ? nodemailer.createTransport({
@@ -160,7 +162,7 @@ export class AuthMessageService {
     subject: string,
     message: string,
   ): Promise<DeliveryResult> {
-    if (!this.smtpTransporter) {
+    if (!this.smtpTransporter || !this.smtpFrom) {
       return { channel: 'email', destination, mode: 'simulated' };
     }
 

@@ -77,9 +77,11 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         const fromAddress = this.configService.get('MAIL_FROM_ADDRESS') ??
             this.configService.get('MAIL_USERNAME') ??
             '';
-        this.smtpFrom = fromName
-            ? `${fromName} <${fromAddress}>`
-            : fromAddress || 'no-reply@example.com';
+        this.smtpFrom = fromAddress
+            ? fromName
+                ? `${fromName} <${fromAddress}>`
+                : fromAddress
+            : '';
         this.smtpTransporter =
             host && Number.isFinite(port)
                 ? nodemailer.createTransport({
@@ -137,7 +139,7 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         return value.startsWith('whatsapp:') ? value : `whatsapp:${value}`;
     }
     async sendEmail(destination, subject, message) {
-        if (!this.smtpTransporter) {
+        if (!this.smtpTransporter || !this.smtpFrom) {
             return { channel: 'email', destination, mode: 'simulated' };
         }
         try {
