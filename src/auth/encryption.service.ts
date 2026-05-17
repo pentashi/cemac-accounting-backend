@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   createCipheriv,
+  createHash,
   createDecipheriv,
   pbkdf2Sync,
   randomBytes,
@@ -11,6 +12,8 @@ import {
 
 @Injectable()
 export class EncryptionService {
+  private readonly logger = new Logger(EncryptionService.name);
+  private static readonly fallbackIterations = 600000;
   private readonly algorithm: string;
   private readonly encryptionKey: string;
   private readonly ivLength: number;
@@ -23,15 +26,33 @@ export class EncryptionService {
     this.algorithm =
       this.configService.get<string>('OTP_ENCRYPTION_ALGORITHM') ?? 'aes-256-gcm';
     const configuredKey = this.configService.get<string>('OTP_ENCRYPTION_KEY');
-    if (!configuredKey) {
-      throw new Error('OTP_ENCRYPTION_KEY is required');
-    }
-    if (!/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
+    if (configuredKey && !/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
       throw new Error(
         'OTP_ENCRYPTION_KEY must be a 64-character hexadecimal string',
       );
     }
-    this.encryptionKey = configuredKey;
+    const fallbackSecret = this.configService.get<string>('JWT_SECRET');
+    if (configuredKey) {
+      this.encryptionKey = configuredKey;
+    } else if (fallbackSecret) {
+      const fallbackSalt =
+        this.configService.get<string>('OTP_ENCRYPTION_FALLBACK_SALT') ??
+        createHash('sha256')
+          .update(`otp-encryption-fallback-salt:${fallbackSecret}`)
+          .digest('hex');
+      this.logger.warn(
+        'OTP_ENCRYPTION_KEY is not set; deriving OTP encryption key from JWT_SECRET. Configure OTP_ENCRYPTION_KEY in production to avoid secret coupling.',
+      );
+      this.encryptionKey = pbkdf2Sync(
+        fallbackSecret,
+        fallbackSalt,
+        EncryptionService.fallbackIterations,
+        32,
+        'sha512',
+      ).toString('hex');
+    } else {
+      throw new Error('OTP_ENCRYPTION_KEY or JWT_SECRET is required');
+    }
     this.ivLength = Number.parseInt(
       this.configService.get<string>('OTP_IV_LENGTH') ?? '16',
       10,

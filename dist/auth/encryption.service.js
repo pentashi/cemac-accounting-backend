@@ -8,13 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var EncryptionService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EncryptionService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const crypto_1 = require("crypto");
 let EncryptionService = class EncryptionService {
+    static { EncryptionService_1 = this; }
     configService;
+    logger = new common_1.Logger(EncryptionService_1.name);
+    static fallbackIterations = 600000;
     algorithm;
     encryptionKey;
     ivLength;
@@ -27,13 +31,24 @@ let EncryptionService = class EncryptionService {
         this.algorithm =
             this.configService.get('OTP_ENCRYPTION_ALGORITHM') ?? 'aes-256-gcm';
         const configuredKey = this.configService.get('OTP_ENCRYPTION_KEY');
-        if (!configuredKey) {
-            throw new Error('OTP_ENCRYPTION_KEY is required');
-        }
-        if (!/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
+        if (configuredKey && !/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
             throw new Error('OTP_ENCRYPTION_KEY must be a 64-character hexadecimal string');
         }
-        this.encryptionKey = configuredKey;
+        const fallbackSecret = this.configService.get('JWT_SECRET');
+        if (configuredKey) {
+            this.encryptionKey = configuredKey;
+        }
+        else if (fallbackSecret) {
+            const fallbackSalt = this.configService.get('OTP_ENCRYPTION_FALLBACK_SALT') ??
+                (0, crypto_1.createHash)('sha256')
+                    .update(`otp-encryption-fallback-salt:${fallbackSecret}`)
+                    .digest('hex');
+            this.logger.warn('OTP_ENCRYPTION_KEY is not set; deriving OTP encryption key from JWT_SECRET. Configure OTP_ENCRYPTION_KEY in production to avoid secret coupling.');
+            this.encryptionKey = (0, crypto_1.pbkdf2Sync)(fallbackSecret, fallbackSalt, EncryptionService_1.fallbackIterations, 32, 'sha512').toString('hex');
+        }
+        else {
+            throw new Error('OTP_ENCRYPTION_KEY or JWT_SECRET is required');
+        }
         this.ivLength = Number.parseInt(this.configService.get('OTP_IV_LENGTH') ?? '16', 10);
         this.saltLength = Number.parseInt(this.configService.get('OTP_SALT_LENGTH') ?? '64', 10);
         this.tagLength = Number.parseInt(this.configService.get('OTP_TAG_LENGTH') ?? '16', 10);
@@ -72,7 +87,7 @@ let EncryptionService = class EncryptionService {
     }
 };
 exports.EncryptionService = EncryptionService;
-exports.EncryptionService = EncryptionService = __decorate([
+exports.EncryptionService = EncryptionService = EncryptionService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService])
 ], EncryptionService);

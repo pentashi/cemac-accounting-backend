@@ -1,6 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 export declare class EncryptionService {
     private readonly configService;
+    private readonly logger;
+    private static readonly fallbackIterations;
     private readonly algorithm;
     private readonly encryptionKey;
     private readonly ivLength;
