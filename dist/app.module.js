@@ -32,6 +32,7 @@ exports.AppModule = AppModule = __decorate([
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],
                 useFactory: (config) => {
+                    const defaultDbPort = 5432;
                     const nodeEnv = config.get('NODE_ENV');
                     const dbSynchronizeEnv = config.get('DB_SYNCHRONIZE')?.trim();
                     const syncOverride = dbSynchronizeEnv?.toLowerCase();
@@ -40,7 +41,7 @@ exports.AppModule = AppModule = __decorate([
                         ? ['true', '1', 'yes', 'on'].includes(syncOverride)
                         : nodeEnv !== 'production';
                     const dbHost = config.get('DB_HOST');
-                    const dbPort = parseInt(config.get('DB_PORT') ?? '5432', 10);
+                    const dbPort = parseInt(config.get('DB_PORT') ?? String(defaultDbPort), 10);
                     const dbUser = config.get('DB_USER');
                     const dbPassword = config.get('DB_PASSWORD');
                     const dbName = config.get('DB_NAME');
@@ -48,7 +49,7 @@ exports.AppModule = AppModule = __decorate([
                         const parsedUrl = new URL(databaseUrl);
                         const parsedPort = parsedUrl.port
                             ? parseInt(parsedUrl.port, 10)
-                            : 5432;
+                            : defaultDbPort;
                         const parsedDatabaseName = decodeURIComponent(parsedUrl.pathname.replace(/^\//, ''));
                         const database = parsedDatabaseName || dbName;
                         if (!database) {

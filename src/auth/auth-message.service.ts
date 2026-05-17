@@ -100,11 +100,12 @@ export class AuthMessageService {
       this.configService.get<string>('MAIL_PASSWORD') ??
       this.configService.get<string>('EMAIL_PASSWORD') ??
       this.configService.get<string>('SMTP_PASS');
-    const smtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : undefined;
+    const parsedSmtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : NaN;
+    const smtpPort = Number.isNaN(parsedSmtpPort) ? 587 : parsedSmtpPort;
     const smtpSecureRaw =
       this.configService.get<string>('MAIL_SECURE') ??
       this.configService.get<string>('SMTP_SECURE');
-    const smtpSecure = this.determineSmtpSecure(smtpSecureRaw, smtpPort ?? 587);
+    const smtpSecure = this.determineSmtpSecure(smtpSecureRaw, smtpPort);
 
     this.smtpFrom =
       this.configService.get<string>('MAIL_FROM_ADDRESS') ??
@@ -112,7 +113,7 @@ export class AuthMessageService {
       smtpUser ??
       'noreply@localhost';
 
-    if (smtpHost && smtpPort && smtpUser && smtpPassword) {
+    if (smtpHost && smtpUser && smtpPassword) {
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const smtpModule = require('nodemailer') as SmtpModuleExports;

@@ -24,6 +24,7 @@ import { SettingsModule } from './settings/settings.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        const defaultDbPort = 5432;
         const nodeEnv = config.get<string>('NODE_ENV');
         const dbSynchronizeEnv = config.get<string>('DB_SYNCHRONIZE')?.trim();
         const syncOverride = dbSynchronizeEnv?.toLowerCase();
@@ -34,7 +35,10 @@ import { SettingsModule } from './settings/settings.module';
           : nodeEnv !== 'production';
 
         const dbHost = config.get<string>('DB_HOST');
-        const dbPort = parseInt(config.get<string>('DB_PORT') ?? '5432', 10);
+        const dbPort = parseInt(
+          config.get<string>('DB_PORT') ?? String(defaultDbPort),
+          10,
+        );
         const dbUser = config.get<string>('DB_USER');
         const dbPassword = config.get<string>('DB_PASSWORD');
         const dbName = config.get<string>('DB_NAME');
@@ -43,7 +47,7 @@ import { SettingsModule } from './settings/settings.module';
           const parsedUrl = new URL(databaseUrl);
           const parsedPort = parsedUrl.port
             ? parseInt(parsedUrl.port, 10)
-            : 5432;
+            : defaultDbPort;
           const parsedDatabaseName = decodeURIComponent(
             parsedUrl.pathname.replace(/^\//, ''),
           );

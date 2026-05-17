@@ -52,16 +52,17 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         const smtpPassword = this.configService.get('MAIL_PASSWORD') ??
             this.configService.get('EMAIL_PASSWORD') ??
             this.configService.get('SMTP_PASS');
-        const smtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : undefined;
+        const parsedSmtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : NaN;
+        const smtpPort = Number.isNaN(parsedSmtpPort) ? 587 : parsedSmtpPort;
         const smtpSecureRaw = this.configService.get('MAIL_SECURE') ??
             this.configService.get('SMTP_SECURE');
-        const smtpSecure = this.determineSmtpSecure(smtpSecureRaw, smtpPort ?? 587);
+        const smtpSecure = this.determineSmtpSecure(smtpSecureRaw, smtpPort);
         this.smtpFrom =
             this.configService.get('MAIL_FROM_ADDRESS') ??
                 this.configService.get('SMTP_FROM') ??
                 smtpUser ??
                 'noreply@localhost';
-        if (smtpHost && smtpPort && smtpUser && smtpPassword) {
+        if (smtpHost && smtpUser && smtpPassword) {
             try {
                 const smtpModule = require('nodemailer');
                 this.smtpTransporter = smtpModule.createTransport({
