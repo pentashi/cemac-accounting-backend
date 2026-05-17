@@ -21,7 +21,7 @@ export declare class UserService {
         canal: import("../auth/auth-message.service").DeliveryChannel;
         destination: string;
         expiresInSeconds: number;
-        deliveryMode: "resend" | "twilio" | "webhook" | "simulated";
+        deliveryMode: "resend" | "smtp" | "twilio" | "webhook" | "simulated";
     }>;
     resetPassword(dto: ResetPasswordDto): Promise<{
         message: string;

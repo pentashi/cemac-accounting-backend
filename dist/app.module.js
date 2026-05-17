@@ -35,16 +35,43 @@ exports.AppModule = AppModule = __decorate([
                     const nodeEnv = config.get('NODE_ENV');
                     const dbSynchronizeEnv = config.get('DB_SYNCHRONIZE')?.trim();
                     const syncOverride = dbSynchronizeEnv?.toLowerCase();
+                    const databaseUrl = config.get('DATABASE_URL')?.trim();
                     const synchronize = syncOverride
                         ? ['true', '1', 'yes', 'on'].includes(syncOverride)
                         : nodeEnv !== 'production';
+                    const dbHost = config.get('DB_HOST');
+                    const dbPort = parseInt(config.get('DB_PORT') ?? '5432', 10);
+                    const dbUser = config.get('DB_USER');
+                    const dbPassword = config.get('DB_PASSWORD');
+                    const dbName = config.get('DB_NAME');
+                    if (databaseUrl) {
+                        const parsedUrl = new URL(databaseUrl);
+                        const parsedPort = parsedUrl.port
+                            ? parseInt(parsedUrl.port, 10)
+                            : 5432;
+                        return {
+                            type: 'postgres',
+                            host: parsedUrl.hostname,
+                            port: parsedPort,
+                            username: decodeURIComponent(parsedUrl.username),
+                            password: decodeURIComponent(parsedUrl.password),
+                            database: decodeURIComponent(parsedUrl.pathname.replace(/^\//, '')),
+                            autoLoadEntities: true,
+                            synchronize,
+                            ssl: config.get('DB_SSL')?.toLowerCase() === 'false'
+                                ? false
+                                : nodeEnv === 'production'
+                                    ? { rejectUnauthorized: false }
+                                    : false,
+                        };
+                    }
                     return {
                         type: 'postgres',
-                        host: config.get('DB_HOST'),
-                        port: parseInt((config.get('DB_PORT') ?? '5432'), 10),
-                        username: config.get('DB_USER'),
-                        password: config.get('DB_PASSWORD'),
-                        database: config.get('DB_NAME'),
+                        host: dbHost,
+                        port: dbPort,
+                        username: dbUser,
+                        password: dbPassword,
+                        database: dbName,
                         autoLoadEntities: true,
                         synchronize,
                     };

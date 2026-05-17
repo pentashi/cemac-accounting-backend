@@ -31,7 +31,7 @@ export declare class AuthService {
         canal: DeliveryChannel;
         destination: string;
         expiresInSeconds: number;
-        deliveryMode: "resend" | "twilio" | "webhook" | "simulated";
+        deliveryMode: "resend" | "smtp" | "twilio" | "webhook" | "simulated";
     }>;
     verifierCode(identifier: {
         emailProfessionnel?: string;
@@ -44,7 +44,7 @@ export declare class AuthService {
         canal: DeliveryChannel;
         destination: string;
         expiresInSeconds: number;
-        deliveryMode: "resend" | "twilio" | "webhook" | "simulated";
+        deliveryMode: "resend" | "smtp" | "twilio" | "webhook" | "simulated";
     }>;
     resetMdp(payload: PasswordResetPayload): Promise<{
         message: string;
@@ -54,7 +54,7 @@ export declare class AuthService {
         canal: DeliveryChannel;
         destination: string;
         expiresInSeconds: number;
-        deliveryMode: "resend" | "twilio" | "webhook" | "simulated";
+        deliveryMode: "resend" | "smtp" | "twilio" | "webhook" | "simulated";
     }>;
     resetPasswordWithToken(email: string, code: string, newPassword: string): Promise<{
         message: string;

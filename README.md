@@ -35,19 +35,26 @@ DB_PORT=5432
 DB_USER=youruser
 DB_PASSWORD=yourpassword
 DB_NAME=cemac_db
+# Optional alternative to DB_*:
+DATABASE_URL=postgresql://user:password@host:5432/cemac_db
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_EXPIRES_IN=3600s
 # Optional explicit override for TypeORM schema auto-sync (production default is already false).
 DB_SYNCHRONIZE=false
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=your-email@gmail.com
+RESEND_API_KEY=re_your_api_key_here
+RESEND_FROM=onboarding@resend.dev
+# Optional SMTP fallback (legacy keys like MAIL_* are also supported):
+MAIL_HOST=smtp.mailgun.org
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USERNAME=noreply@example.com
+MAIL_PASSWORD=replace-with-smtp-password
+MAIL_FROM_ADDRESS=noreply@example.com
 FRONTEND_URL=http://localhost:3000
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=replace-with-your-twilio-auth-token
 TWILIO_SMS_FROM=+1234567890
+TWILIO_SERVICE_SID=MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_WHATSAPP_FROM=+14155238886
 SMS_PROVIDER_URL=
 WHATSAPP_PROVIDER_URL=

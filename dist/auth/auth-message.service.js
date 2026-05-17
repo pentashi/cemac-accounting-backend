@@ -23,6 +23,8 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
     twilioClientLoaded = false;
     resendClient;
     resendFrom;
+    smtpTransporter;
+    smtpFrom;
     constructor(configService) {
         this.configService = configService;
         const accountSid = this.configService.get('TWILIO_ACCOUNT_SID');
@@ -33,6 +35,47 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         this.resendClient = apiKey ? new resend_1.Resend(apiKey) : null;
         this.resendFrom =
             this.configService.get('RESEND_FROM') ?? 'onboarding@resend.dev';
+        const smtpHost = this.configService.get('MAIL_HOST') ??
+            this.configService.get('SMTP_HOST');
+        const smtpPortValue = this.configService.get('MAIL_PORT') ??
+            this.configService.get('SMTP_PORT');
+        const smtpUser = this.configService.get('MAIL_USERNAME') ??
+            this.configService.get('MAIL_USER') ??
+            this.configService.get('SMTP_USER');
+        const smtpPassword = this.configService.get('MAIL_PASSWORD') ??
+            this.configService.get('EMAIL_PASSWORD') ??
+            this.configService.get('SMTP_PASS');
+        const smtpPort = smtpPortValue ? parseInt(smtpPortValue, 10) : undefined;
+        const smtpSecureRaw = this.configService.get('MAIL_SECURE') ??
+            this.configService.get('SMTP_SECURE');
+        const smtpSecure = smtpSecureRaw
+            ? ['true', '1', 'yes', 'on'].includes(smtpSecureRaw.toLowerCase())
+            : (smtpPort ?? 587) === 465;
+        this.smtpFrom =
+            this.configService.get('MAIL_FROM_ADDRESS') ??
+                this.configService.get('SMTP_FROM') ??
+                this.resendFrom;
+        if (smtpHost && smtpPort && smtpUser && smtpPassword) {
+            try {
+                const smtpModule = require('nodemailer');
+                this.smtpTransporter = smtpModule.createTransport({
+                    host: smtpHost,
+                    port: smtpPort,
+                    secure: smtpSecure,
+                    auth: {
+                        user: smtpUser,
+                        pass: smtpPassword,
+                    },
+                });
+            }
+            catch (err) {
+                this.smtpTransporter = null;
+                this.logger.warn(`SMTP SDK is unavailable (${err.message}). Falling back to simulated delivery.`);
+            }
+        }
+        else {
+            this.smtpTransporter = null;
+        }
     }
     getTwilioClient() {
         if (this.twilioClientLoaded) {
@@ -76,30 +119,46 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         return value.startsWith('whatsapp:') ? value : `whatsapp:${value}`;
     }
     async sendEmail(destination, subject, message) {
-        if (!this.resendClient) {
+        if (this.resendClient) {
+            try {
+                await this.resendClient.emails.send({
+                    from: this.resendFrom,
+                    to: destination,
+                    subject,
+                    text: message,
+                });
+                return { channel: 'email', destination, mode: 'resend' };
+            }
+            catch (err) {
+                this.logger.warn(`Resend delivery failed (${err.message}). Falling back to SMTP/simulated mode.`);
+            }
+        }
+        if (!this.smtpTransporter) {
             return { channel: 'email', destination, mode: 'simulated' };
         }
         try {
-            await this.resendClient.emails.send({
-                from: this.resendFrom,
+            await this.smtpTransporter.sendMail({
+                from: this.smtpFrom,
                 to: destination,
                 subject,
                 text: message,
             });
-            return { channel: 'email', destination, mode: 'resend' };
+            return { channel: 'email', destination, mode: 'smtp' };
         }
         catch (err) {
-            this.logger.warn(`Resend delivery failed (${err.message}). Falling back to simulated mode.`);
+            this.logger.warn(`SMTP delivery failed (${err.message}). Falling back to simulated mode.`);
             return { channel: 'email', destination, mode: 'simulated' };
         }
     }
     async sendWebhookMessage(channel, destination, message) {
         const twilioClient = this.getTwilioClient();
         const from = this.configService.get(channel === 'sms' ? 'TWILIO_SMS_FROM' : 'TWILIO_WHATSAPP_FROM');
-        if (twilioClient && from) {
+        const messagingServiceSid = this.configService.get('TWILIO_SERVICE_SID');
+        if (twilioClient && (from || messagingServiceSid)) {
             await twilioClient.messages.create({
                 body: message,
-                from: this.formatTwilioNumber(channel, from),
+                from: from ? this.formatTwilioNumber(channel, from) : undefined,
+                messagingServiceSid: from ? undefined : messagingServiceSid,
                 to: this.formatTwilioNumber(channel, destination),
             });
             return {
