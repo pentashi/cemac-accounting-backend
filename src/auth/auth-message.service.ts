@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import nodemailer, { type Transporter } from 'nodemailer';
+import * as nodemailer from 'nodemailer';
+import { type Transporter } from 'nodemailer';
 
 export type DeliveryChannel = 'email' | 'whatsapp' | 'sms';
 export type DeliveryPurpose = 'verification' | 'password_reset';

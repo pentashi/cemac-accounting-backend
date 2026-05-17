@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from 'crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  pbkdf2Sync,
+  randomBytes,
+  type CipherGCM,
+  type DecipherGCM,
+} from 'crypto';
 
 @Injectable()
 export class EncryptionService {
@@ -51,7 +58,7 @@ export class EncryptionService {
       'sha512',
     );
 
-    const cipher = createCipheriv(this.algorithm, key, iv);
+    const cipher = createCipheriv(this.algorithm, key, iv) as CipherGCM;
     const encrypted = Buffer.concat([
       cipher.update(Buffer.from(plaintext, 'utf8')),
       cipher.final(),
@@ -84,7 +91,7 @@ export class EncryptionService {
       'sha512',
     );
 
-    const decipher = createDecipheriv(this.algorithm, key, iv);
+    const decipher = createDecipheriv(this.algorithm, key, iv) as DecipherGCM;
     decipher.setAuthTag(tag);
     const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
     return decrypted.toString('utf8');

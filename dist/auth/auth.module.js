@@ -19,6 +19,8 @@ const config_1 = require("@nestjs/config");
 const roles_guard_1 = require("./roles.guard");
 const audit_module_1 = require("../audit/audit.module");
 const auth_message_service_1 = require("./auth-message.service");
+const redis_service_1 = require("../redis/redis.service");
+const encryption_service_1 = require("./encryption.service");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -36,7 +38,14 @@ exports.AuthModule = AuthModule = __decorate([
             }),
             audit_module_1.AuditModule,
         ],
-        providers: [auth_service_1.AuthService, auth_message_service_1.AuthMessageService, jwt_strategy_1.JwtStrategy, roles_guard_1.RolesGuard],
+        providers: [
+            auth_service_1.AuthService,
+            auth_message_service_1.AuthMessageService,
+            jwt_strategy_1.JwtStrategy,
+            roles_guard_1.RolesGuard,
+            redis_service_1.RedisService,
+            encryption_service_1.EncryptionService,
+        ],
         controllers: [auth_controller_1.AuthController],
         exports: [auth_service_1.AuthService, roles_guard_1.RolesGuard],
     })

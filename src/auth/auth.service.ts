@@ -26,6 +26,12 @@ type CodePurpose = 'verification' | 'password_reset';
 
 @Injectable()
 export class AuthService {
+  private readonly otpPrefix: string;
+  private readonly otpRateLimitPrefix: string;
+  private readonly otpExpirySeconds: number;
+  private readonly otpMaxAttempts: number;
+  private readonly otpRateLimitWindowSeconds: number;
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
@@ -35,24 +41,23 @@ export class AuthService {
     private readonly authMessageService: AuthMessageService,
     private readonly redisService: RedisService,
     private readonly encryptionService: EncryptionService,
-  ) {}
-
-  private readonly otpPrefix =
-    this.configService.get<string>('OTP_PREFIX') ?? 'otp:';
-  private readonly otpRateLimitPrefix =
-    this.configService.get<string>('OTP_RATE_LIMIT_PREFIX') ?? 'rate_limit:';
-  private readonly otpExpirySeconds = Number.parseInt(
-    this.configService.get<string>('OTP_EXPIRY') ?? '300',
-    10,
-  );
-  private readonly otpMaxAttempts = Number.parseInt(
-    this.configService.get<string>('OTP_MAX_ATTEMPTS') ?? '3',
-    10,
-  );
-  private readonly otpRateLimitWindowSeconds = Number.parseInt(
-    this.configService.get<string>('OTP_RATE_LIMIT_WINDOW') ?? '900',
-    10,
-  );
+  ) {
+    this.otpPrefix = this.configService.get<string>('OTP_PREFIX') ?? 'otp:';
+    this.otpRateLimitPrefix =
+      this.configService.get<string>('OTP_RATE_LIMIT_PREFIX') ?? 'rate_limit:';
+    this.otpExpirySeconds = Number.parseInt(
+      this.configService.get<string>('OTP_EXPIRY') ?? '300',
+      10,
+    );
+    this.otpMaxAttempts = Number.parseInt(
+      this.configService.get<string>('OTP_MAX_ATTEMPTS') ?? '3',
+      10,
+    );
+    this.otpRateLimitWindowSeconds = Number.parseInt(
+      this.configService.get<string>('OTP_RATE_LIMIT_WINDOW') ?? '900',
+      10,
+    );
+  }
 
   private genererCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();

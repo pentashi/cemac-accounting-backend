@@ -1,9 +1,9 @@
 import { ConfigService } from '@nestjs/config';
 import { AuthMessageService } from './auth-message.service';
 
-const mockTwilio = jest.fn();
-const mockSendMail = jest.fn();
-const mockCreateTransport = jest.fn();
+var mockTwilio = jest.fn();
+var mockSendMail = jest.fn();
+var mockCreateTransport = jest.fn();
 
 jest.mock(
   'twilio',
@@ -14,19 +14,20 @@ jest.mock(
   { virtual: true },
 );
 
-jest.mock('nodemailer', () => ({
-  __esModule: true,
-  default: {
-    createTransport: mockCreateTransport,
-  },
-}));
-
 interface TwilioMessagePayload {
   body: string;
   to: string;
   from?: string;
   messagingServiceSid?: string;
 }
+
+jest.mock('nodemailer', () => ({
+  __esModule: true,
+  createTransport: (...args: unknown[]) => mockCreateTransport(...args),
+  default: {
+    createTransport: (...args: unknown[]) => mockCreateTransport(...args),
+  },
+}));
 
 describe('AuthMessageService', () => {
   const mockCreate = jest.fn<Promise<void>, [TwilioMessagePayload]>();
