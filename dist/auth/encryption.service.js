@@ -17,8 +17,9 @@ const crypto_1 = require("crypto");
 let EncryptionService = class EncryptionService {
     static { EncryptionService_1 = this; }
     configService;
+    logger = new common_1.Logger(EncryptionService_1.name);
     static defaultFallbackSalt = 'cemac-accounting-backend:otp-fallback';
-    static fallbackIterations = 100000;
+    static fallbackIterations = 600000;
     algorithm;
     encryptionKey;
     ivLength;
@@ -42,6 +43,7 @@ let EncryptionService = class EncryptionService {
             this.encryptionKey = configuredKey;
         }
         else if (fallbackSecret) {
+            this.logger.warn('OTP_ENCRYPTION_KEY is not set; deriving OTP encryption key from JWT_SECRET. Configure OTP_ENCRYPTION_KEY in production to avoid secret coupling.');
             this.encryptionKey = (0, crypto_1.pbkdf2Sync)(fallbackSecret, fallbackSalt, EncryptionService_1.fallbackIterations, 32, 'sha512').toString('hex');
         }
         else {

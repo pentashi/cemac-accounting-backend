@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   createCipheriv,
@@ -11,9 +11,10 @@ import {
 
 @Injectable()
 export class EncryptionService {
+  private readonly logger = new Logger(EncryptionService.name);
   private static readonly defaultFallbackSalt =
     'cemac-accounting-backend:otp-fallback';
-  private static readonly fallbackIterations = 100000;
+  private static readonly fallbackIterations = 600000;
   private readonly algorithm: string;
   private readonly encryptionKey: string;
   private readonly ivLength: number;
@@ -40,6 +41,9 @@ export class EncryptionService {
     if (configuredKey) {
       this.encryptionKey = configuredKey;
     } else if (fallbackSecret) {
+      this.logger.warn(
+        'OTP_ENCRYPTION_KEY is not set; deriving OTP encryption key from JWT_SECRET. Configure OTP_ENCRYPTION_KEY in production to avoid secret coupling.',
+      );
       this.encryptionKey = pbkdf2Sync(
         fallbackSecret,
         fallbackSalt,

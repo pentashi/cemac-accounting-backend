@@ -1,5 +1,4 @@
 import { ConfigService } from '@nestjs/config';
-import { pbkdf2Sync } from 'crypto';
 import { EncryptionService } from './encryption.service';
 
 function createMockConfigService(config: Record<string, string | undefined>) {
@@ -25,13 +24,6 @@ describe('EncryptionService', () => {
 
   it('falls back to a deterministic PBKDF2-derived key from JWT_SECRET', () => {
     const jwtSecret = 'my-jwt-secret';
-    const expectedKey = pbkdf2Sync(
-      jwtSecret,
-      'cemac-accounting-backend:otp-fallback',
-      100000,
-      32,
-      'sha512',
-    ).toString('hex');
     const serviceA = new EncryptionService(
       createMockConfigService({
         JWT_SECRET: jwtSecret,
@@ -46,7 +38,6 @@ describe('EncryptionService', () => {
     const payload = serviceA.encrypt('654321');
 
     expect(serviceB.decrypt(payload)).toBe('654321');
-    expect(expectedKey).toHaveLength(64);
   });
 
   it('throws when OTP_ENCRYPTION_KEY format is invalid', () => {
