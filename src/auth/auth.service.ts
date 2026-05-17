@@ -1,4 +1,5 @@
 import { Injectable, NotImplementedException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuditLogService } from '../audit/audit-log.service';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +7,9 @@ import { Repository } from 'typeorm';
 import { User } from '../user/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { AuthMessageService, DeliveryChannel } from './auth-message.service';
+import { RedisService } from '../redis/redis.service';
+import { EncryptionService } from './encryption.service';
+import { createHash, timingSafeEqual } from 'crypto';
 
 interface CodeRequestPayload {
   emailProfessionnel?: string;
@@ -22,17 +26,38 @@ type CodePurpose = 'verification' | 'password_reset';
 
 @Injectable()
 export class AuthService {
+  private readonly otpPrefix: string;
+  private readonly otpRateLimitPrefix: string;
+  private readonly otpExpirySeconds: number;
+  private readonly otpMaxAttempts: number;
+  private readonly otpRateLimitWindowSeconds: number;
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
+    private readonly configService: ConfigService,
     private readonly auditLogService: AuditLogService,
     private readonly authMessageService: AuthMessageService,
-  ) {}
-
-  private readonly derniereDemandeCode: Record<string, number> = {};
-  private static readonly DELAI_RESEND = 60 * 1000;
-  private static readonly VALIDITE_CODE = 10 * 60 * 1000;
+    private readonly redisService: RedisService,
+    private readonly encryptionService: EncryptionService,
+  ) {
+    this.otpPrefix = this.configService.get<string>('OTP_PREFIX') ?? 'otp:';
+    this.otpRateLimitPrefix =
+      this.configService.get<string>('OTP_RATE_LIMIT_PREFIX') ?? 'rate_limit:';
+    this.otpExpirySeconds = Number.parseInt(
+      this.configService.get<string>('OTP_EXPIRY') ?? '300',
+      10,
+    );
+    this.otpMaxAttempts = Number.parseInt(
+      this.configService.get<string>('OTP_MAX_ATTEMPTS') ?? '3',
+      10,
+    );
+    this.otpRateLimitWindowSeconds = Number.parseInt(
+      this.configService.get<string>('OTP_RATE_LIMIT_WINDOW') ?? '900',
+      10,
+    );
+  }
 
   private genererCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -75,29 +100,61 @@ export class AuthService {
   }
 
   private getStorageKey(purpose: CodePurpose, userId: number): string {
-    return `${purpose}_${userId}`;
+    return `${this.otpPrefix}${purpose}:${userId}`;
+  }
+
+  private getRateLimitKey(userId: number): string {
+    return `${this.otpRateLimitPrefix}${userId}`;
+  }
+
+  private async findUserByIdentifier(identifier: {
+    emailProfessionnel?: string;
+    telephone?: string;
+  }): Promise<User> {
+    const user = identifier.emailProfessionnel
+      ? await this.usersRepository.findOne({
+          where: { emailProfessionnel: identifier.emailProfessionnel },
+        })
+      : identifier.telephone
+        ? await this.usersRepository.findOne({
+            where: { telephone: identifier.telephone },
+          })
+        : null;
+
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur non trouvé');
+    }
+
+    return user;
+  }
+
+  private compareCodes(expectedCode: string, incomingCode: string): boolean {
+    const expectedDigest = createHash('sha256').update(expectedCode).digest();
+    const incomingDigest = createHash('sha256').update(incomingCode).digest();
+    return timingSafeEqual(expectedDigest, incomingDigest);
   }
 
   private async requestCode(payload: CodeRequestPayload, purpose: CodePurpose) {
     const user = await this.findUserByPayload(payload);
-    const now = Date.now();
     const storageKey = this.getStorageKey(purpose, user.id);
+    const rateLimitKey = this.getRateLimitKey(user.id);
+    const currentAttempts = Number.parseInt(
+      (await this.redisService.get(rateLimitKey)) ?? '0',
+      10,
+    );
 
-    if (this.derniereDemandeCode[storageKey] && now - this.derniereDemandeCode[storageKey] < AuthService.DELAI_RESEND) {
+    if (currentAttempts >= this.otpMaxAttempts) {
       throw new UnauthorizedException('Veuillez patienter avant de redemander un code');
     }
 
     const code = this.genererCode();
-    if (purpose === 'verification') {
-      user.verificationCode = code;
-      user.verificationCodeExpires = now + AuthService.VALIDITE_CODE;
-    } else {
-      user.resetCode = code;
-      user.resetCodeExpires = now + AuthService.VALIDITE_CODE;
-    }
+    const encryptedCode = this.encryptionService.encrypt(code);
+    await this.redisService.set(storageKey, encryptedCode, this.otpExpirySeconds);
 
-    await this.usersRepository.save(user);
-    this.derniereDemandeCode[storageKey] = now;
+    const attemptsAfterIncrement = await this.redisService.incr(rateLimitKey);
+    if (attemptsAfterIncrement === 1) {
+      await this.redisService.expire(rateLimitKey, this.otpRateLimitWindowSeconds);
+    }
 
     const destination = payload.canal === 'email' ? user.emailProfessionnel : user.telephone;
     const delivery = await this.authMessageService.sendCode(payload.canal, destination, code, purpose);
@@ -111,7 +168,7 @@ export class AuthService {
       message: purpose === 'verification' ? 'Code de vérification envoyé.' : 'Code de réinitialisation envoyé.',
       canal: payload.canal,
       destination: this.maskDestination(destination),
-      expiresInSeconds: AuthService.VALIDITE_CODE / 1000,
+      expiresInSeconds: this.otpExpirySeconds,
       deliveryMode: delivery.mode,
     };
   }
@@ -121,20 +178,21 @@ export class AuthService {
   }
 
   async verifierCode(identifier: { emailProfessionnel?: string; telephone?: string }, code: string) {
-    const user = identifier.emailProfessionnel
-      ? await this.usersRepository.findOne({ where: { emailProfessionnel: identifier.emailProfessionnel } })
-      : identifier.telephone
-        ? await this.usersRepository.findOne({ where: { telephone: identifier.telephone } })
-        : null;
+    const user = await this.findUserByIdentifier(identifier);
+    const storageKey = this.getStorageKey('verification', user.id);
+    const encryptedCode = await this.redisService.get(storageKey);
+    if (!encryptedCode) throw new UnauthorizedException('Aucun code à vérifier');
 
-    if (!user) throw new UnauthorizedException('Utilisateur non trouvé');
-    if (!user.verificationCode || !user.verificationCodeExpires) throw new UnauthorizedException('Aucun code à vérifier');
-    if (user.verificationCode !== code) throw new UnauthorizedException('Code incorrect');
-    if ((user.verificationCodeExpires ?? 0) < Date.now()) throw new UnauthorizedException('Code expiré');
+    let expectedCode: string;
+    try {
+      expectedCode = this.encryptionService.decrypt(encryptedCode);
+    } catch {
+      throw new UnauthorizedException('Code invalide');
+    }
+    if (!this.compareCodes(expectedCode, code)) throw new UnauthorizedException('Code incorrect');
 
     user.isVerified = true;
-    user.verificationCode = undefined;
-    user.verificationCodeExpires = undefined;
+    await this.redisService.del(storageKey);
     await this.usersRepository.save(user);
     await this.auditLogService.log(user.id, 'verification_code_verified', 'User', String(user.id));
 
@@ -146,21 +204,27 @@ export class AuthService {
   }
 
   async resetMdp(payload: PasswordResetPayload) {
-    const user = payload.emailProfessionnel
-      ? await this.usersRepository.findOne({ where: { emailProfessionnel: payload.emailProfessionnel } })
-      : payload.telephone
-        ? await this.usersRepository.findOne({ where: { telephone: payload.telephone } })
-        : null;
+    const user = await this.findUserByIdentifier({
+      emailProfessionnel: payload.emailProfessionnel,
+      telephone: payload.telephone,
+    });
+    const storageKey = this.getStorageKey('password_reset', user.id);
+    const encryptedCode = await this.redisService.get(storageKey);
+    if (!encryptedCode) throw new UnauthorizedException('Aucun code à vérifier');
+    if (!payload.code) throw new UnauthorizedException('Le code est requis');
 
-    if (!user) throw new UnauthorizedException('Utilisateur non trouvé');
-    if (!user.resetCode || !user.resetCodeExpires) throw new UnauthorizedException('Aucun code à vérifier');
-    if (user.resetCode !== payload.code) throw new UnauthorizedException('Code incorrect');
-    if ((user.resetCodeExpires ?? 0) < Date.now()) throw new UnauthorizedException('Code expiré');
+    let expectedCode: string;
+    try {
+      expectedCode = this.encryptionService.decrypt(encryptedCode);
+    } catch {
+      throw new UnauthorizedException('Code invalide');
+    }
+    if (!this.compareCodes(expectedCode, payload.code))
+      throw new UnauthorizedException('Code incorrect');
     if (!payload.nouveauMotDePasse) throw new UnauthorizedException('Le nouveau mot de passe est requis');
 
     user.motDePasse = await bcrypt.hash(payload.nouveauMotDePasse, 10);
-    user.resetCode = undefined;
-    user.resetCodeExpires = undefined;
+    await this.redisService.del(storageKey);
     await this.usersRepository.save(user);
     await this.auditLogService.log(user.id, 'password_reset_completed', 'User', String(user.id));
 

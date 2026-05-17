@@ -44,10 +44,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const audit_log_service_1 = require("../audit/audit-log.service");
 const jwt_1 = require("@nestjs/jwt");
 const typeorm_1 = require("@nestjs/typeorm");
@@ -55,21 +55,37 @@ const typeorm_2 = require("typeorm");
 const user_entity_1 = require("../user/user.entity");
 const bcrypt = __importStar(require("bcryptjs"));
 const auth_message_service_1 = require("./auth-message.service");
+const redis_service_1 = require("../redis/redis.service");
+const encryption_service_1 = require("./encryption.service");
+const crypto_1 = require("crypto");
 let AuthService = class AuthService {
-    static { AuthService_1 = this; }
     usersRepository;
     jwtService;
+    configService;
     auditLogService;
     authMessageService;
-    constructor(usersRepository, jwtService, auditLogService, authMessageService) {
+    redisService;
+    encryptionService;
+    otpPrefix;
+    otpRateLimitPrefix;
+    otpExpirySeconds;
+    otpMaxAttempts;
+    otpRateLimitWindowSeconds;
+    constructor(usersRepository, jwtService, configService, auditLogService, authMessageService, redisService, encryptionService) {
         this.usersRepository = usersRepository;
         this.jwtService = jwtService;
+        this.configService = configService;
         this.auditLogService = auditLogService;
         this.authMessageService = authMessageService;
+        this.redisService = redisService;
+        this.encryptionService = encryptionService;
+        this.otpPrefix = this.configService.get('OTP_PREFIX') ?? 'otp:';
+        this.otpRateLimitPrefix =
+            this.configService.get('OTP_RATE_LIMIT_PREFIX') ?? 'rate_limit:';
+        this.otpExpirySeconds = Number.parseInt(this.configService.get('OTP_EXPIRY') ?? '300', 10);
+        this.otpMaxAttempts = Number.parseInt(this.configService.get('OTP_MAX_ATTEMPTS') ?? '3', 10);
+        this.otpRateLimitWindowSeconds = Number.parseInt(this.configService.get('OTP_RATE_LIMIT_WINDOW') ?? '900', 10);
     }
-    derniereDemandeCode = {};
-    static DELAI_RESEND = 60 * 1000;
-    static VALIDITE_CODE = 10 * 60 * 1000;
     genererCode() {
         return Math.floor(100000 + Math.random() * 900000).toString();
     }
@@ -101,26 +117,46 @@ let AuthService = class AuthService {
         return user;
     }
     getStorageKey(purpose, userId) {
-        return `${purpose}_${userId}`;
+        return `${this.otpPrefix}${purpose}:${userId}`;
+    }
+    getRateLimitKey(userId) {
+        return `${this.otpRateLimitPrefix}${userId}`;
+    }
+    async findUserByIdentifier(identifier) {
+        const user = identifier.emailProfessionnel
+            ? await this.usersRepository.findOne({
+                where: { emailProfessionnel: identifier.emailProfessionnel },
+            })
+            : identifier.telephone
+                ? await this.usersRepository.findOne({
+                    where: { telephone: identifier.telephone },
+                })
+                : null;
+        if (!user) {
+            throw new common_1.UnauthorizedException('Utilisateur non trouvé');
+        }
+        return user;
+    }
+    compareCodes(expectedCode, incomingCode) {
+        const expectedDigest = (0, crypto_1.createHash)('sha256').update(expectedCode).digest();
+        const incomingDigest = (0, crypto_1.createHash)('sha256').update(incomingCode).digest();
+        return (0, crypto_1.timingSafeEqual)(expectedDigest, incomingDigest);
     }
     async requestCode(payload, purpose) {
         const user = await this.findUserByPayload(payload);
-        const now = Date.now();
         const storageKey = this.getStorageKey(purpose, user.id);
-        if (this.derniereDemandeCode[storageKey] && now - this.derniereDemandeCode[storageKey] < AuthService_1.DELAI_RESEND) {
+        const rateLimitKey = this.getRateLimitKey(user.id);
+        const currentAttempts = Number.parseInt((await this.redisService.get(rateLimitKey)) ?? '0', 10);
+        if (currentAttempts >= this.otpMaxAttempts) {
             throw new common_1.UnauthorizedException('Veuillez patienter avant de redemander un code');
         }
         const code = this.genererCode();
-        if (purpose === 'verification') {
-            user.verificationCode = code;
-            user.verificationCodeExpires = now + AuthService_1.VALIDITE_CODE;
+        const encryptedCode = this.encryptionService.encrypt(code);
+        await this.redisService.set(storageKey, encryptedCode, this.otpExpirySeconds);
+        const attemptsAfterIncrement = await this.redisService.incr(rateLimitKey);
+        if (attemptsAfterIncrement === 1) {
+            await this.redisService.expire(rateLimitKey, this.otpRateLimitWindowSeconds);
         }
-        else {
-            user.resetCode = code;
-            user.resetCodeExpires = now + AuthService_1.VALIDITE_CODE;
-        }
-        await this.usersRepository.save(user);
-        this.derniereDemandeCode[storageKey] = now;
         const destination = payload.canal === 'email' ? user.emailProfessionnel : user.telephone;
         const delivery = await this.authMessageService.sendCode(payload.canal, destination, code, purpose);
         await this.auditLogService.log(user.id, `${purpose}_code_sent`, 'User', String(user.id), {
@@ -132,7 +168,7 @@ let AuthService = class AuthService {
             message: purpose === 'verification' ? 'Code de vérification envoyé.' : 'Code de réinitialisation envoyé.',
             canal: payload.canal,
             destination: this.maskDestination(destination),
-            expiresInSeconds: AuthService_1.VALIDITE_CODE / 1000,
+            expiresInSeconds: this.otpExpirySeconds,
             deliveryMode: delivery.mode,
         };
     }
@@ -140,22 +176,22 @@ let AuthService = class AuthService {
         return this.requestCode(payload, 'verification');
     }
     async verifierCode(identifier, code) {
-        const user = identifier.emailProfessionnel
-            ? await this.usersRepository.findOne({ where: { emailProfessionnel: identifier.emailProfessionnel } })
-            : identifier.telephone
-                ? await this.usersRepository.findOne({ where: { telephone: identifier.telephone } })
-                : null;
-        if (!user)
-            throw new common_1.UnauthorizedException('Utilisateur non trouvé');
-        if (!user.verificationCode || !user.verificationCodeExpires)
+        const user = await this.findUserByIdentifier(identifier);
+        const storageKey = this.getStorageKey('verification', user.id);
+        const encryptedCode = await this.redisService.get(storageKey);
+        if (!encryptedCode)
             throw new common_1.UnauthorizedException('Aucun code à vérifier');
-        if (user.verificationCode !== code)
+        let expectedCode;
+        try {
+            expectedCode = this.encryptionService.decrypt(encryptedCode);
+        }
+        catch {
+            throw new common_1.UnauthorizedException('Code invalide');
+        }
+        if (!this.compareCodes(expectedCode, code))
             throw new common_1.UnauthorizedException('Code incorrect');
-        if ((user.verificationCodeExpires ?? 0) < Date.now())
-            throw new common_1.UnauthorizedException('Code expiré');
         user.isVerified = true;
-        user.verificationCode = undefined;
-        user.verificationCodeExpires = undefined;
+        await this.redisService.del(storageKey);
         await this.usersRepository.save(user);
         await this.auditLogService.log(user.id, 'verification_code_verified', 'User', String(user.id));
         return { message: 'Utilisateur vérifié avec succès' };
@@ -164,24 +200,29 @@ let AuthService = class AuthService {
         return this.requestCode(payload, 'password_reset');
     }
     async resetMdp(payload) {
-        const user = payload.emailProfessionnel
-            ? await this.usersRepository.findOne({ where: { emailProfessionnel: payload.emailProfessionnel } })
-            : payload.telephone
-                ? await this.usersRepository.findOne({ where: { telephone: payload.telephone } })
-                : null;
-        if (!user)
-            throw new common_1.UnauthorizedException('Utilisateur non trouvé');
-        if (!user.resetCode || !user.resetCodeExpires)
+        const user = await this.findUserByIdentifier({
+            emailProfessionnel: payload.emailProfessionnel,
+            telephone: payload.telephone,
+        });
+        const storageKey = this.getStorageKey('password_reset', user.id);
+        const encryptedCode = await this.redisService.get(storageKey);
+        if (!encryptedCode)
             throw new common_1.UnauthorizedException('Aucun code à vérifier');
-        if (user.resetCode !== payload.code)
+        if (!payload.code)
+            throw new common_1.UnauthorizedException('Le code est requis');
+        let expectedCode;
+        try {
+            expectedCode = this.encryptionService.decrypt(encryptedCode);
+        }
+        catch {
+            throw new common_1.UnauthorizedException('Code invalide');
+        }
+        if (!this.compareCodes(expectedCode, payload.code))
             throw new common_1.UnauthorizedException('Code incorrect');
-        if ((user.resetCodeExpires ?? 0) < Date.now())
-            throw new common_1.UnauthorizedException('Code expiré');
         if (!payload.nouveauMotDePasse)
             throw new common_1.UnauthorizedException('Le nouveau mot de passe est requis');
         user.motDePasse = await bcrypt.hash(payload.nouveauMotDePasse, 10);
-        user.resetCode = undefined;
-        user.resetCodeExpires = undefined;
+        await this.redisService.del(storageKey);
         await this.usersRepository.save(user);
         await this.auditLogService.log(user.id, 'password_reset_completed', 'User', String(user.id));
         return { message: 'Mot de passe réinitialisé avec succès' };
@@ -233,12 +274,15 @@ let AuthService = class AuthService {
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = AuthService_1 = __decorate([
+exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         jwt_1.JwtService,
+        config_1.ConfigService,
         audit_log_service_1.AuditLogService,
-        auth_message_service_1.AuthMessageService])
+        auth_message_service_1.AuthMessageService,
+        redis_service_1.RedisService,
+        encryption_service_1.EncryptionService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

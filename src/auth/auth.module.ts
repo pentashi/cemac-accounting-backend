@@ -10,6 +10,8 @@ import { ConfigService } from '@nestjs/config';
 import { RolesGuard } from './roles.guard';
 import { AuditModule } from '../audit/audit.module';
 import { AuthMessageService } from './auth-message.service';
+import { RedisService } from '../redis/redis.service';
+import { EncryptionService } from './encryption.service';
 
 @Module({
   imports: [
@@ -24,7 +26,14 @@ import { AuthMessageService } from './auth-message.service';
     }),
     AuditModule,
   ],
-  providers: [AuthService, AuthMessageService, JwtStrategy, RolesGuard],
+  providers: [
+    AuthService,
+    AuthMessageService,
+    JwtStrategy,
+    RolesGuard,
+    RedisService,
+    EncryptionService,
+  ],
   controllers: [AuthController],
   exports: [AuthService, RolesGuard],
 })

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
+import { type Transporter } from 'nodemailer';
 
 export type DeliveryChannel = 'email' | 'whatsapp' | 'sms';
 export type DeliveryPurpose = 'verification' | 'password_reset';
@@ -8,15 +9,16 @@ export type DeliveryPurpose = 'verification' | 'password_reset';
 export interface DeliveryResult {
   channel: DeliveryChannel;
   destination: string;
-  mode: 'resend' | 'twilio' | 'webhook' | 'simulated';
+  mode: 'smtp' | 'twilio' | 'webhook' | 'simulated';
 }
 
 interface TwilioMessageClient {
   messages: {
     create(params: {
       body: string;
-      from: string;
       to: string;
+      from?: string;
+      messagingServiceSid?: string;
     }): Promise<unknown>;
   };
 }
@@ -33,22 +35,59 @@ export class AuthMessageService {
   private readonly logger = new Logger(AuthMessageService.name);
   private readonly twilioAccountSid: string | null;
   private readonly twilioAuthToken: string | null;
+  private readonly twilioServiceSid: string | null;
   private twilioClient: TwilioMessageClient | null = null;
   private twilioClientLoaded = false;
-  private readonly resendClient: Resend | null;
-  private readonly resendFrom: string;
+  private readonly smtpTransporter: Transporter | null;
+  private readonly smtpFrom: string;
 
   constructor(private readonly configService: ConfigService) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    const serviceSid = this.configService.get<string>('TWILIO_SERVICE_SID');
 
     this.twilioAccountSid = accountSid ?? null;
     this.twilioAuthToken = authToken ?? null;
+    this.twilioServiceSid = serviceSid ?? null;
 
-    const apiKey = this.configService.get<string>('RESEND_API_KEY');
-    this.resendClient = apiKey ? new Resend(apiKey) : null;
-    this.resendFrom =
-      this.configService.get<string>('RESEND_FROM') ?? 'onboarding@resend.dev';
+    const host = this.configService.get<string>('MAIL_HOST');
+    const port = Number.parseInt(
+      this.configService.get<string>('MAIL_PORT') ?? '587',
+      10,
+    );
+    const secureEnv = this.configService.get<string>('MAIL_SECURE');
+    const secure =
+      secureEnv !== undefined
+        ? ['true', '1', 'yes', 'on'].includes(secureEnv.toLowerCase())
+        : port === 465;
+    const username = this.configService.get<string>('MAIL_USERNAME');
+    const password = this.configService.get<string>('MAIL_PASSWORD');
+    const fromName = this.configService.get<string>('MAIL_FROM_NAME') ?? '';
+    const fromAddress =
+      this.configService.get<string>('MAIL_FROM_ADDRESS') ??
+      this.configService.get<string>('MAIL_USERNAME') ??
+      '';
+
+    this.smtpFrom = fromAddress
+      ? fromName
+        ? `${fromName} <${fromAddress}>`
+        : fromAddress
+      : '';
+    this.smtpTransporter =
+      host && Number.isFinite(port)
+        ? nodemailer.createTransport({
+            host,
+            port,
+            secure,
+            auth:
+              username && password
+                ? {
+                    user: username,
+                    pass: password,
+                  }
+                : undefined,
+          })
+        : null;
   }
 
   private getTwilioClient(): TwilioMessageClient | null {
@@ -123,21 +162,21 @@ export class AuthMessageService {
     subject: string,
     message: string,
   ): Promise<DeliveryResult> {
-    if (!this.resendClient) {
+    if (!this.smtpTransporter || !this.smtpFrom) {
       return { channel: 'email', destination, mode: 'simulated' };
     }
 
     try {
-      await this.resendClient.emails.send({
-        from: this.resendFrom,
+      await this.smtpTransporter.sendMail({
+        from: this.smtpFrom,
         to: destination,
         subject,
         text: message,
       });
-      return { channel: 'email', destination, mode: 'resend' };
+      return { channel: 'email', destination, mode: 'smtp' };
     } catch (err) {
       this.logger.warn(
-        `Resend delivery failed (${(err as Error).message}). Falling back to simulated mode.`,
+        `SMTP delivery failed (${(err as Error).message}). Falling back to simulated mode.`,
       );
       return { channel: 'email', destination, mode: 'simulated' };
     }
@@ -149,15 +188,12 @@ export class AuthMessageService {
     message: string,
   ): Promise<DeliveryResult> {
     const twilioClient = this.getTwilioClient();
-    const from = this.configService.get<string>(
-      channel === 'sms' ? 'TWILIO_SMS_FROM' : 'TWILIO_WHATSAPP_FROM',
-    );
 
-    if (twilioClient && from) {
+    if (twilioClient && this.twilioServiceSid) {
       await twilioClient.messages.create({
         body: message,
-        from: this.formatTwilioNumber(channel, from),
         to: this.formatTwilioNumber(channel, destination),
+        messagingServiceSid: this.twilioServiceSid,
       });
 
       return {
