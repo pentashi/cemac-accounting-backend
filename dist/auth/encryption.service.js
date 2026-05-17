@@ -8,13 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var EncryptionService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EncryptionService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const crypto_1 = require("crypto");
 let EncryptionService = class EncryptionService {
+    static { EncryptionService_1 = this; }
     configService;
+    static fallbackSalt = 'otp-encryption-fallback-key';
+    static fallbackIterations = 100000;
     algorithm;
     encryptionKey;
     ivLength;
@@ -36,7 +40,7 @@ let EncryptionService = class EncryptionService {
         }
         this.encryptionKey =
             configuredKey ??
-                (0, crypto_1.createHash)('sha256').update(fallbackSecret).digest('hex');
+                (0, crypto_1.pbkdf2Sync)(fallbackSecret, EncryptionService_1.fallbackSalt, EncryptionService_1.fallbackIterations, 32, 'sha512').toString('hex');
         this.ivLength = Number.parseInt(this.configService.get('OTP_IV_LENGTH') ?? '16', 10);
         this.saltLength = Number.parseInt(this.configService.get('OTP_SALT_LENGTH') ?? '64', 10);
         this.tagLength = Number.parseInt(this.configService.get('OTP_TAG_LENGTH') ?? '16', 10);
@@ -75,7 +79,7 @@ let EncryptionService = class EncryptionService {
     }
 };
 exports.EncryptionService = EncryptionService;
-exports.EncryptionService = EncryptionService = __decorate([
+exports.EncryptionService = EncryptionService = EncryptionService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService])
 ], EncryptionService);

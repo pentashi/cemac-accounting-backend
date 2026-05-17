@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import {
   createCipheriv,
   createDecipheriv,
-  createHash,
   pbkdf2Sync,
   randomBytes,
   type CipherGCM,
@@ -12,6 +11,8 @@ import {
 
 @Injectable()
 export class EncryptionService {
+  private static readonly fallbackSalt = 'otp-encryption-fallback-key';
+  private static readonly fallbackIterations = 100000;
   private readonly algorithm: string;
   private readonly encryptionKey: string;
   private readonly ivLength: number;
@@ -35,7 +36,13 @@ export class EncryptionService {
     }
     this.encryptionKey =
       configuredKey ??
-      createHash('sha256').update(fallbackSecret!).digest('hex');
+      pbkdf2Sync(
+        fallbackSecret!,
+        EncryptionService.fallbackSalt,
+        EncryptionService.fallbackIterations,
+        32,
+        'sha512',
+      ).toString('hex');
     this.ivLength = Number.parseInt(
       this.configService.get<string>('OTP_IV_LENGTH') ?? '16',
       10,

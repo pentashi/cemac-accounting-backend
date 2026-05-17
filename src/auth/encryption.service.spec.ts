@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { createHash } from 'crypto';
+import { pbkdf2Sync } from 'crypto';
 import { EncryptionService } from './encryption.service';
 
 function createMockConfigService(config: Record<string, string | undefined>) {
@@ -23,18 +23,29 @@ describe('EncryptionService', () => {
     expect(service.decrypt(payload)).toBe('123456');
   });
 
-  it('falls back to a deterministic SHA-256 key from JWT_SECRET', () => {
+  it('falls back to a deterministic PBKDF2-derived key from JWT_SECRET', () => {
     const jwtSecret = 'my-jwt-secret';
-    const expectedKey = createHash('sha256').update(jwtSecret).digest('hex');
-    const service = new EncryptionService(
+    const expectedKey = pbkdf2Sync(
+      jwtSecret,
+      'otp-encryption-fallback-key',
+      100000,
+      32,
+      'sha512',
+    ).toString('hex');
+    const serviceA = new EncryptionService(
+      createMockConfigService({
+        JWT_SECRET: jwtSecret,
+      }),
+    );
+    const serviceB = new EncryptionService(
       createMockConfigService({
         JWT_SECRET: jwtSecret,
       }),
     );
 
-    const payload = service.encrypt('654321');
+    const payload = serviceA.encrypt('654321');
 
-    expect(service.decrypt(payload)).toBe('654321');
+    expect(serviceB.decrypt(payload)).toBe('654321');
     expect(expectedKey).toHaveLength(64);
   });
 
