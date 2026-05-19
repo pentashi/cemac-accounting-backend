@@ -80,21 +80,16 @@ describe('AuthMessageService', () => {
     expect(result.channel).toBe('email');
   });
 
-  it('falls back to simulated mode when MAIL_HOST is not set', async () => {
+  it('throws when MAIL_HOST is not set', async () => {
     const service = createService({});
 
-    const result = await service.sendCode(
-      'email',
-      'user@example.com',
-      '654321',
-      'password_reset',
-    );
-
+    await expect(
+      service.sendCode('email', 'user@example.com', '654321', 'password_reset'),
+    ).rejects.toThrow('Email delivery is not configured on the server.');
     expect(mockSendMail).not.toHaveBeenCalled();
-    expect(result.mode).toBe('simulated');
   });
 
-  it('falls back to simulated mode when SMTP send fails', async () => {
+  it('throws when SMTP send fails', async () => {
     mockSendMail.mockRejectedValueOnce(new Error('smtp error'));
 
     const service = createService({
@@ -104,14 +99,21 @@ describe('AuthMessageService', () => {
       MAIL_PASSWORD: 'secret',
     });
 
-    const result = await service.sendCode(
-      'email',
-      'user@example.com',
-      '000000',
-      'verification',
+    await expect(
+      service.sendCode('email', 'user@example.com', '000000', 'verification'),
+    ).rejects.toThrow(
+      'SMTP delivery failed. Check mail server configuration and credentials.',
     );
+  });
 
-    expect(result.mode).toBe('simulated');
+  it('throws when SMS fallback webhook is not configured', async () => {
+    const service = createService({});
+
+    await expect(
+      service.sendCode('sms', '+237600000000', '999999', 'verification'),
+    ).rejects.toThrow(
+      'Message delivery provider is not configured on the server.',
+    );
   });
 
   it('sends SMS codes with the Twilio SDK', async () => {
@@ -174,6 +176,8 @@ describe('AuthMessageService', () => {
 
     await expect(
       service.sendCode('sms', '+237600000000', '123456', 'verification'),
-    ).rejects.toThrow('twilio send failed');
+    ).rejects.toThrow(
+      'Twilio delivery failed. Check Twilio credentials, service SID, and destination.',
+    );
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotImplementedException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, Logger, NotImplementedException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuditLogService } from '../audit/audit-log.service';
 import { JwtService } from '@nestjs/jwt';
@@ -309,7 +309,13 @@ export class AuthService {
         role,
       });
       await this.usersRepository.save(user);
-      await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
+      try {
+        await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
+      } catch (auditError) {
+        this.logger.error(
+          `Register audit log failed userId=${user.id} email=${maskedEmail} phone=${maskedPhone} message=${auditError instanceof Error ? auditError.message : 'unknown'}`,
+        );
+      }
       this.logger.log(
         `Register success userId=${user.id} email=${maskedEmail} phone=${maskedPhone} role=${role}`,
       );
@@ -326,18 +332,34 @@ export class AuthService {
           `Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`,
           error.stack,
         );
+
+        if (driverError?.code === '23505') {
+          throw new ConflictException(
+            "Impossible de finaliser l'inscription: ces informations sont déjà utilisées.",
+          );
+        }
+
+        throw new InternalServerErrorException(
+          "Erreur base de données lors de l'inscription.",
+        );
       } else if (error instanceof Error) {
         this.logger.error(
           `Register unexpected error email=${maskedEmail} phone=${maskedPhone} role=${role} message=${error.message}`,
           error.stack,
         );
+
+        throw new InternalServerErrorException(
+          "Erreur inattendue lors de l'inscription.",
+        );
       } else {
         this.logger.error(
           `Register unknown failure email=${maskedEmail} phone=${maskedPhone} role=${role}`,
         );
-      }
 
-      throw error;
+        throw new InternalServerErrorException(
+          "Erreur inconnue lors de l'inscription.",
+        );
+      }
     }
   }
 }
