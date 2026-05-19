@@ -32,11 +32,18 @@ __decorate([
     __metadata("design:type", String)
 ], CreateClientDto.prototype, "telephone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Adresse du client', example: '123 Rue Principale, Douala' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Adresse du client',
+        example: '123 Rue Principale, Douala',
+    }),
     __metadata("design:type", String)
 ], CreateClientDto.prototype, "adresse", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Numéro contribuable', example: 'M123456789', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Numéro contribuable',
+        example: 'M123456789',
+        required: false,
+    }),
     __metadata("design:type", String)
 ], CreateClientDto.prototype, "numero_contribuable", void 0);
 class UpdateClientDto extends CreateClientDto {
@@ -51,23 +58,39 @@ class CreateFournisseurDto {
 }
 exports.CreateFournisseurDto = CreateFournisseurDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Nom du fournisseur', example: 'Fournisseur XYZ' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Nom du fournisseur',
+        example: 'Fournisseur XYZ',
+    }),
     __metadata("design:type", String)
 ], CreateFournisseurDto.prototype, "nom", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Email du fournisseur', example: 'contact@xyz.com' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Email du fournisseur',
+        example: 'contact@xyz.com',
+    }),
     __metadata("design:type", String)
 ], CreateFournisseurDto.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Téléphone du fournisseur', example: '+237699999999' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Téléphone du fournisseur',
+        example: '+237699999999',
+    }),
     __metadata("design:type", String)
 ], CreateFournisseurDto.prototype, "telephone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Adresse du fournisseur', example: '456 Avenue Centrale, Yaoundé' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Adresse du fournisseur',
+        example: '456 Avenue Centrale, Yaoundé',
+    }),
     __metadata("design:type", String)
 ], CreateFournisseurDto.prototype, "adresse", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Numéro contribuable', example: 'F987654321', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Numéro contribuable',
+        example: 'F987654321',
+        required: false,
+    }),
     __metadata("design:type", String)
 ], CreateFournisseurDto.prototype, "numero_contribuable", void 0);
 class UpdateFournisseurDto extends CreateFournisseurDto {

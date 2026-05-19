@@ -20,23 +20,44 @@ class UpdateUserDto {
 }
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Raison sociale', example: 'Société ABC', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Raison sociale',
+        example: 'Société ABC',
+        required: false,
+    }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "raisonSociale", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Email professionnel', example: 'contact@abc.com', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Email professionnel',
+        example: 'contact@abc.com',
+        required: false,
+    }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "emailProfessionnel", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Téléphone', example: '+33612345678', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Téléphone',
+        example: '+33612345678',
+        required: false,
+    }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "telephone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Mot de passe (min 8 caractères)', example: 'StrongP@ssw0rd', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Mot de passe (min 8 caractères)',
+        example: 'StrongP@ssw0rd',
+        required: false,
+    }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "motDePasse", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Rôle', example: 'user', required: false, enum: ['admin', 'user'] }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Rôle',
+        example: 'user',
+        required: false,
+        enum: ['admin', 'user'],
+    }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "role", void 0);
 //# sourceMappingURL=update-user.dto.js.map

@@ -101,7 +101,9 @@ let AuthService = AuthService_1 = class AuthService {
     }
     getMaskedRegisterIdentifiers(emailProfessionnel, telephone) {
         return {
-            maskedEmail: emailProfessionnel ? this.maskDestination(emailProfessionnel) : 'n/a',
+            maskedEmail: emailProfessionnel
+                ? this.maskDestination(emailProfessionnel)
+                : 'n/a',
             maskedPhone: telephone ? this.maskDestination(telephone) : 'n/a',
         };
     }
@@ -113,16 +115,20 @@ let AuthService = AuthService_1 = class AuthService {
             .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[email]')
             .replace(/\+?\d[\d\s\-().]{6,}\d/g, '[phone]');
     }
-    async findUserByPayload({ emailProfessionnel, telephone, canal }) {
+    async findUserByPayload({ emailProfessionnel, telephone, canal, }) {
         let user = null;
         if (canal === 'email' && emailProfessionnel) {
-            user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+            user = await this.usersRepository.findOne({
+                where: { emailProfessionnel },
+            });
         }
         if ((canal === 'sms' || canal === 'whatsapp') && telephone) {
             user = await this.usersRepository.findOne({ where: { telephone } });
         }
         if (!user && emailProfessionnel) {
-            user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+            user = await this.usersRepository.findOne({
+                where: { emailProfessionnel },
+            });
         }
         if (!user && telephone) {
             user = await this.usersRepository.findOne({ where: { telephone } });
@@ -181,7 +187,9 @@ let AuthService = AuthService_1 = class AuthService {
             mode: delivery.mode,
         });
         return {
-            message: purpose === 'verification' ? 'Code de vérification envoyé.' : 'Code de réinitialisation envoyé.',
+            message: purpose === 'verification'
+                ? 'Code de vérification envoyé.'
+                : 'Code de réinitialisation envoyé.',
             canal: payload.canal,
             destination: this.maskDestination(destination),
             expiresInSeconds: this.otpExpirySeconds,
@@ -247,10 +255,17 @@ let AuthService = AuthService_1 = class AuthService {
         return this.demanderResetMdp({ emailProfessionnel: email, canal: 'email' });
     }
     async resetPasswordWithToken(email, code, newPassword) {
-        return this.resetMdp({ emailProfessionnel: email, code, nouveauMotDePasse: newPassword, canal: 'email' });
+        return this.resetMdp({
+            emailProfessionnel: email,
+            code,
+            nouveauMotDePasse: newPassword,
+            canal: 'email',
+        });
     }
     async validateUser(emailProfessionnel, motDePasse) {
-        const user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+        const user = await this.usersRepository.findOne({
+            where: { emailProfessionnel },
+        });
         if (!user)
             return null;
         if (!user.isVerified) {
@@ -266,7 +281,11 @@ let AuthService = AuthService_1 = class AuthService {
         throw new common_1.NotImplementedException('Connexion Google requiert une intégration provider dédiée.');
     }
     async login(user) {
-        const payload = { emailProfessionnel: user.emailProfessionnel, sub: user.id, role: user.role };
+        const payload = {
+            emailProfessionnel: user.emailProfessionnel,
+            sub: user.id,
+            role: user.role,
+        };
         await this.auditLogService.log(user.id, 'login', 'User', String(user.id));
         return {
             access_token: this.jwtService.sign(payload),

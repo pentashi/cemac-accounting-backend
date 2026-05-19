@@ -22,8 +22,13 @@ export class AuthController {
       required: ['emailProfessionnel', 'motDePasse'],
     },
   })
-  async login(@Body() body: { emailProfessionnel: string; motDePasse: string }) {
-    const user = await this.authService.validateUser(body.emailProfessionnel, body.motDePasse);
+  async login(
+    @Body() body: { emailProfessionnel: string; motDePasse: string },
+  ) {
+    const user = await this.authService.validateUser(
+      body.emailProfessionnel,
+      body.motDePasse,
+    );
     if (!user || user.error) {
       return user ?? { error: 'Identifiants invalides' };
     }
@@ -54,19 +59,32 @@ export class AuthController {
   }
 
   @Post('envoyer-code-verification')
-  @ApiOperation({ summary: 'Envoyer un code de vérification par email, SMS ou WhatsApp' })
+  @ApiOperation({
+    summary: 'Envoyer un code de vérification par email, SMS ou WhatsApp',
+  })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
         emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
         telephone: { type: 'string', example: '+33612345678' },
-        canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
+        canal: {
+          type: 'string',
+          enum: ['email', 'whatsapp', 'sms'],
+          example: 'email',
+        },
       },
       required: ['canal'],
     },
   })
-  async envoyerCodeVerification(@Body() body: { emailProfessionnel?: string; telephone?: string; canal: 'email' | 'whatsapp' | 'sms' }) {
+  async envoyerCodeVerification(
+    @Body()
+    body: {
+      emailProfessionnel?: string;
+      telephone?: string;
+      canal: 'email' | 'whatsapp' | 'sms';
+    },
+  ) {
     return this.authService.envoyerCodeVerification(body);
   }
 
@@ -83,24 +101,50 @@ export class AuthController {
       required: ['code'],
     },
   })
-  async verifierCode(@Body() body: { emailProfessionnel?: string; telephone?: string; code: string }) {
-    return this.authService.verifierCode({ emailProfessionnel: body.emailProfessionnel, telephone: body.telephone }, body.code);
+  async verifierCode(
+    @Body()
+    body: {
+      emailProfessionnel?: string;
+      telephone?: string;
+      code: string;
+    },
+  ) {
+    return this.authService.verifierCode(
+      {
+        emailProfessionnel: body.emailProfessionnel,
+        telephone: body.telephone,
+      },
+      body.code,
+    );
   }
 
   @Post('demander-reset-mdp')
-  @ApiOperation({ summary: 'Demander un code de réinitialisation du mot de passe' })
+  @ApiOperation({
+    summary: 'Demander un code de réinitialisation du mot de passe',
+  })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
         emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
         telephone: { type: 'string', example: '+33612345678' },
-        canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
+        canal: {
+          type: 'string',
+          enum: ['email', 'whatsapp', 'sms'],
+          example: 'email',
+        },
       },
       required: ['canal'],
     },
   })
-  async demanderResetMdp(@Body() body: { emailProfessionnel?: string; telephone?: string; canal: 'email' | 'whatsapp' | 'sms' }) {
+  async demanderResetMdp(
+    @Body()
+    body: {
+      emailProfessionnel?: string;
+      telephone?: string;
+      canal: 'email' | 'whatsapp' | 'sms';
+    },
+  ) {
     return this.authService.demanderResetMdp(body);
   }
 
@@ -114,12 +158,25 @@ export class AuthController {
         telephone: { type: 'string', example: '+33612345678' },
         code: { type: 'string', example: '123456' },
         nouveauMotDePasse: { type: 'string', example: 'NouveauP@ssw0rd' },
-        canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
+        canal: {
+          type: 'string',
+          enum: ['email', 'whatsapp', 'sms'],
+          example: 'email',
+        },
       },
       required: ['code', 'nouveauMotDePasse', 'canal'],
     },
   })
-  async resetMdp(@Body() body: { emailProfessionnel?: string; telephone?: string; code: string; nouveauMotDePasse: string; canal: 'email' | 'whatsapp' | 'sms' }) {
+  async resetMdp(
+    @Body()
+    body: {
+      emailProfessionnel?: string;
+      telephone?: string;
+      code: string;
+      nouveauMotDePasse: string;
+      canal: 'email' | 'whatsapp' | 'sms';
+    },
+  ) {
     return this.authService.resetMdp(body);
   }
 

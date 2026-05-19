@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
+import {
+  RequestPasswordResetDto,
+  ResetPasswordDto,
+} from './dto/password-reset.dto';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationService } from '../notification/notification.service';
 import { AuthService } from '../auth/auth.service';
@@ -27,7 +30,13 @@ export class UserService {
       role: createUserDto.role ?? 'user',
     });
     const saved = await this.userRepository.save(user);
-    await this.auditLogService.log(saved.id, 'create_user', 'User', String(saved.id), { raisonSociale: saved.raisonSociale });
+    await this.auditLogService.log(
+      saved.id,
+      'create_user',
+      'User',
+      String(saved.id),
+      { raisonSociale: saved.raisonSociale },
+    );
     await this.notificationService.create(
       saved.id,
       'user_created',
@@ -65,7 +74,9 @@ export class UserService {
     }
     await this.userRepository.update(id, filteredUpdate);
     const updated = await this.userRepository.findOneBy({ id });
-    await this.auditLogService.log(id, 'update_user', 'User', String(id), { updateUserDto: filteredUpdate });
+    await this.auditLogService.log(id, 'update_user', 'User', String(id), {
+      updateUserDto: filteredUpdate,
+    });
     return updated;
   }
 
@@ -80,6 +91,10 @@ export class UserService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    return this.authService.resetPasswordWithToken(dto.email, dto.token, dto.newPassword);
+    return this.authService.resetPasswordWithToken(
+      dto.email,
+      dto.token,
+      dto.newPassword,
+    );
   }
 }

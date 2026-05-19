@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotImplementedException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotImplementedException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuditLogService } from '../audit/audit-log.service';
 import { JwtService } from '@nestjs/jwt';
@@ -74,9 +79,14 @@ export class AuthService {
     return `${destination.slice(0, 3)}${'*'.repeat(Math.max(destination.length - 5, 0))}${destination.slice(-2)}`;
   }
 
-  private getMaskedRegisterIdentifiers(emailProfessionnel?: string, telephone?: string) {
+  private getMaskedRegisterIdentifiers(
+    emailProfessionnel?: string,
+    telephone?: string,
+  ) {
     return {
-      maskedEmail: emailProfessionnel ? this.maskDestination(emailProfessionnel) : 'n/a',
+      maskedEmail: emailProfessionnel
+        ? this.maskDestination(emailProfessionnel)
+        : 'n/a',
       maskedPhone: telephone ? this.maskDestination(telephone) : 'n/a',
     };
   }
@@ -91,11 +101,17 @@ export class AuthService {
       .replace(/\+?\d[\d\s\-().]{6,}\d/g, '[phone]');
   }
 
-  private async findUserByPayload({ emailProfessionnel, telephone, canal }: CodeRequestPayload): Promise<User> {
+  private async findUserByPayload({
+    emailProfessionnel,
+    telephone,
+    canal,
+  }: CodeRequestPayload): Promise<User> {
     let user: User | null = null;
 
     if (canal === 'email' && emailProfessionnel) {
-      user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+      user = await this.usersRepository.findOne({
+        where: { emailProfessionnel },
+      });
     }
 
     if ((canal === 'sms' || canal === 'whatsapp') && telephone) {
@@ -103,7 +119,9 @@ export class AuthService {
     }
 
     if (!user && emailProfessionnel) {
-      user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+      user = await this.usersRepository.findOne({
+        where: { emailProfessionnel },
+      });
     }
 
     if (!user && telephone) {
@@ -162,28 +180,52 @@ export class AuthService {
     );
 
     if (currentAttempts >= this.otpMaxAttempts) {
-      throw new UnauthorizedException('Veuillez patienter avant de redemander un code');
+      throw new UnauthorizedException(
+        'Veuillez patienter avant de redemander un code',
+      );
     }
 
     const code = this.genererCode();
     const encryptedCode = this.encryptionService.encrypt(code);
-    await this.redisService.set(storageKey, encryptedCode, this.otpExpirySeconds);
+    await this.redisService.set(
+      storageKey,
+      encryptedCode,
+      this.otpExpirySeconds,
+    );
 
     const attemptsAfterIncrement = await this.redisService.incr(rateLimitKey);
     if (attemptsAfterIncrement === 1) {
-      await this.redisService.expire(rateLimitKey, this.otpRateLimitWindowSeconds);
+      await this.redisService.expire(
+        rateLimitKey,
+        this.otpRateLimitWindowSeconds,
+      );
     }
 
-    const destination = payload.canal === 'email' ? user.emailProfessionnel : user.telephone;
-    const delivery = await this.authMessageService.sendCode(payload.canal, destination, code, purpose);
-    await this.auditLogService.log(user.id, `${purpose}_code_sent`, 'User', String(user.id), {
-      channel: payload.canal,
-      destination: this.maskDestination(destination),
-      mode: delivery.mode,
-    });
+    const destination =
+      payload.canal === 'email' ? user.emailProfessionnel : user.telephone;
+    const delivery = await this.authMessageService.sendCode(
+      payload.canal,
+      destination,
+      code,
+      purpose,
+    );
+    await this.auditLogService.log(
+      user.id,
+      `${purpose}_code_sent`,
+      'User',
+      String(user.id),
+      {
+        channel: payload.canal,
+        destination: this.maskDestination(destination),
+        mode: delivery.mode,
+      },
+    );
 
     return {
-      message: purpose === 'verification' ? 'Code de vérification envoyé.' : 'Code de réinitialisation envoyé.',
+      message:
+        purpose === 'verification'
+          ? 'Code de vérification envoyé.'
+          : 'Code de réinitialisation envoyé.',
       canal: payload.canal,
       destination: this.maskDestination(destination),
       expiresInSeconds: this.otpExpirySeconds,
@@ -195,11 +237,15 @@ export class AuthService {
     return this.requestCode(payload, 'verification');
   }
 
-  async verifierCode(identifier: { emailProfessionnel?: string; telephone?: string }, code: string) {
+  async verifierCode(
+    identifier: { emailProfessionnel?: string; telephone?: string },
+    code: string,
+  ) {
     const user = await this.findUserByIdentifier(identifier);
     const storageKey = this.getStorageKey('verification', user.id);
     const encryptedCode = await this.redisService.get(storageKey);
-    if (!encryptedCode) throw new UnauthorizedException('Aucun code à vérifier');
+    if (!encryptedCode)
+      throw new UnauthorizedException('Aucun code à vérifier');
 
     let expectedCode: string;
     try {
@@ -207,12 +253,18 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Code invalide');
     }
-    if (!this.compareCodes(expectedCode, code)) throw new UnauthorizedException('Code incorrect');
+    if (!this.compareCodes(expectedCode, code))
+      throw new UnauthorizedException('Code incorrect');
 
     user.isVerified = true;
     await this.redisService.del(storageKey);
     await this.usersRepository.save(user);
-    await this.auditLogService.log(user.id, 'verification_code_verified', 'User', String(user.id));
+    await this.auditLogService.log(
+      user.id,
+      'verification_code_verified',
+      'User',
+      String(user.id),
+    );
 
     return { message: 'Utilisateur vérifié avec succès' };
   }
@@ -228,7 +280,8 @@ export class AuthService {
     });
     const storageKey = this.getStorageKey('password_reset', user.id);
     const encryptedCode = await this.redisService.get(storageKey);
-    if (!encryptedCode) throw new UnauthorizedException('Aucun code à vérifier');
+    if (!encryptedCode)
+      throw new UnauthorizedException('Aucun code à vérifier');
     if (!payload.code) throw new UnauthorizedException('Le code est requis');
 
     let expectedCode: string;
@@ -239,12 +292,18 @@ export class AuthService {
     }
     if (!this.compareCodes(expectedCode, payload.code))
       throw new UnauthorizedException('Code incorrect');
-    if (!payload.nouveauMotDePasse) throw new UnauthorizedException('Le nouveau mot de passe est requis');
+    if (!payload.nouveauMotDePasse)
+      throw new UnauthorizedException('Le nouveau mot de passe est requis');
 
     user.motDePasse = await bcrypt.hash(payload.nouveauMotDePasse, 10);
     await this.redisService.del(storageKey);
     await this.usersRepository.save(user);
-    await this.auditLogService.log(user.id, 'password_reset_completed', 'User', String(user.id));
+    await this.auditLogService.log(
+      user.id,
+      'password_reset_completed',
+      'User',
+      String(user.id),
+    );
 
     return { message: 'Mot de passe réinitialisé avec succès' };
   }
@@ -253,12 +312,26 @@ export class AuthService {
     return this.demanderResetMdp({ emailProfessionnel: email, canal: 'email' });
   }
 
-  async resetPasswordWithToken(email: string, code: string, newPassword: string) {
-    return this.resetMdp({ emailProfessionnel: email, code, nouveauMotDePasse: newPassword, canal: 'email' });
+  async resetPasswordWithToken(
+    email: string,
+    code: string,
+    newPassword: string,
+  ) {
+    return this.resetMdp({
+      emailProfessionnel: email,
+      code,
+      nouveauMotDePasse: newPassword,
+      canal: 'email',
+    });
   }
 
-  async validateUser(emailProfessionnel: string, motDePasse: string): Promise<any> {
-    const user = await this.usersRepository.findOne({ where: { emailProfessionnel } });
+  async validateUser(
+    emailProfessionnel: string,
+    motDePasse: string,
+  ): Promise<any> {
+    const user = await this.usersRepository.findOne({
+      where: { emailProfessionnel },
+    });
     if (!user) return null;
     if (!user.isVerified) {
       return { error: 'Compte non vérifié' };
@@ -271,18 +344,31 @@ export class AuthService {
   }
 
   async loginWithGoogle(_googleToken: string) {
-    throw new NotImplementedException('Connexion Google requiert une intégration provider dédiée.');
+    throw new NotImplementedException(
+      'Connexion Google requiert une intégration provider dédiée.',
+    );
   }
 
   async login(user: User) {
-    const payload = { emailProfessionnel: user.emailProfessionnel, sub: user.id, role: user.role };
+    const payload = {
+      emailProfessionnel: user.emailProfessionnel,
+      sub: user.id,
+      role: user.role,
+    };
     await this.auditLogService.log(user.id, 'login', 'User', String(user.id));
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
 
-  async register(raisonSociale: string, emailProfessionnel: string, telephone: string, motDePasse: string, confirmerMotDePasse: string, role: 'admin' | 'user' = 'user') {
+  async register(
+    raisonSociale: string,
+    emailProfessionnel: string,
+    telephone: string,
+    motDePasse: string,
+    confirmerMotDePasse: string,
+    role: 'admin' | 'user' = 'user',
+  ) {
     const { maskedEmail, maskedPhone } = this.getMaskedRegisterIdentifiers(
       emailProfessionnel,
       telephone,
@@ -309,7 +395,12 @@ export class AuthService {
         role,
       });
       await this.usersRepository.save(user);
-      await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
+      await this.auditLogService.log(
+        user.id,
+        'register',
+        'User',
+        String(user.id),
+      );
       this.logger.log(
         `Register success userId=${user.id} email=${maskedEmail} phone=${maskedPhone} role=${role}`,
       );
@@ -318,7 +409,12 @@ export class AuthService {
       if (error instanceof QueryFailedError) {
         const driverError = (
           error as QueryFailedError & {
-            driverError?: { code?: string; detail?: string; constraint?: string; table?: string };
+            driverError?: {
+              code?: string;
+              detail?: string;
+              constraint?: string;
+              table?: string;
+            };
           }
         ).driverError;
 

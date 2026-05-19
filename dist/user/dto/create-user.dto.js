@@ -25,7 +25,10 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "raisonSociale", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Email professionnel', example: 'contact@abc.com' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Email professionnel',
+        example: 'contact@abc.com',
+    }),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "emailProfessionnel", void 0);
 __decorate([
@@ -33,15 +36,26 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "telephone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Mot de passe (min 8 caractères)', example: 'StrongP@ssw0rd' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Mot de passe (min 8 caractères)',
+        example: 'StrongP@ssw0rd',
+    }),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "motDePasse", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Confirmer le mot de passe', example: 'StrongP@ssw0rd' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Confirmer le mot de passe',
+        example: 'StrongP@ssw0rd',
+    }),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "confirmerMotDePasse", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Rôle', example: 'user', required: false, enum: ['admin', 'user'] }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Rôle',
+        example: 'user',
+        required: false,
+        enum: ['admin', 'user'],
+    }),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "role", void 0);
 //# sourceMappingURL=create-user.dto.js.map

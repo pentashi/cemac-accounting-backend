@@ -29,7 +29,8 @@ let EncryptionService = class EncryptionService {
     constructor(configService) {
         this.configService = configService;
         this.algorithm =
-            this.configService.get('OTP_ENCRYPTION_ALGORITHM') ?? 'aes-256-gcm';
+            this.configService.get('OTP_ENCRYPTION_ALGORITHM') ??
+                'aes-256-gcm';
         const configuredKey = this.configService.get('OTP_ENCRYPTION_KEY');
         if (configuredKey && !/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
             throw new Error('OTP_ENCRYPTION_KEY must be a 64-character hexadecimal string');
@@ -82,7 +83,10 @@ let EncryptionService = class EncryptionService {
         const key = (0, crypto_1.pbkdf2Sync)(this.encryptionKey, salt, this.pbkdf2Iterations, this.keyLength, 'sha512');
         const decipher = (0, crypto_1.createDecipheriv)(this.algorithm, key, iv);
         decipher.setAuthTag(tag);
-        const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+        const decrypted = Buffer.concat([
+            decipher.update(encrypted),
+            decipher.final(),
+        ]);
         return decrypted.toString('utf8');
     }
 };
