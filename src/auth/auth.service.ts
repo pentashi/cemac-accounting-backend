@@ -74,6 +74,23 @@ export class AuthService {
     return `${destination.slice(0, 3)}${'*'.repeat(Math.max(destination.length - 5, 0))}${destination.slice(-2)}`;
   }
 
+  private getMaskedRegisterIdentifiers(emailProfessionnel?: string, telephone?: string) {
+    return {
+      maskedEmail: emailProfessionnel ? this.maskDestination(emailProfessionnel) : 'n/a',
+      maskedPhone: telephone ? this.maskDestination(telephone) : 'n/a',
+    };
+  }
+
+  private sanitizeDriverErrorDetail(detail?: string): string {
+    if (!detail) {
+      return 'n/a';
+    }
+
+    return detail
+      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[email]')
+      .replace(/\+?\d[\d\s\-().]{6,}\d/g, '[phone]');
+  }
+
   private async findUserByPayload({ emailProfessionnel, telephone, canal }: CodeRequestPayload): Promise<User> {
     let user: User | null = null;
 
@@ -266,8 +283,10 @@ export class AuthService {
   }
 
   async register(raisonSociale: string, emailProfessionnel: string, telephone: string, motDePasse: string, confirmerMotDePasse: string, role: 'admin' | 'user' = 'user') {
-    const maskedEmail = emailProfessionnel ? this.maskDestination(emailProfessionnel) : 'n/a';
-    const maskedPhone = telephone ? this.maskDestination(telephone) : 'n/a';
+    const { maskedEmail, maskedPhone } = this.getMaskedRegisterIdentifiers(
+      emailProfessionnel,
+      telephone,
+    );
 
     this.logger.log(
       `Register attempt channel=auth/register email=${maskedEmail} phone=${maskedPhone} role=${role}`,
@@ -304,7 +323,7 @@ export class AuthService {
         ).driverError;
 
         this.logger.error(
-          `Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${driverError?.detail ?? 'n/a'}`,
+          `Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`,
           error.stack,
         );
       } else if (error instanceof Error) {

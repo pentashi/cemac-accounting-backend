@@ -99,6 +99,20 @@ let AuthService = AuthService_1 = class AuthService {
         }
         return `${destination.slice(0, 3)}${'*'.repeat(Math.max(destination.length - 5, 0))}${destination.slice(-2)}`;
     }
+    getMaskedRegisterIdentifiers(emailProfessionnel, telephone) {
+        return {
+            maskedEmail: emailProfessionnel ? this.maskDestination(emailProfessionnel) : 'n/a',
+            maskedPhone: telephone ? this.maskDestination(telephone) : 'n/a',
+        };
+    }
+    sanitizeDriverErrorDetail(detail) {
+        if (!detail) {
+            return 'n/a';
+        }
+        return detail
+            .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[email]')
+            .replace(/\+?\d[\d\s\-().]{6,}\d/g, '[phone]');
+    }
     async findUserByPayload({ emailProfessionnel, telephone, canal }) {
         let user = null;
         if (canal === 'email' && emailProfessionnel) {
@@ -259,8 +273,7 @@ let AuthService = AuthService_1 = class AuthService {
         };
     }
     async register(raisonSociale, emailProfessionnel, telephone, motDePasse, confirmerMotDePasse, role = 'user') {
-        const maskedEmail = emailProfessionnel ? this.maskDestination(emailProfessionnel) : 'n/a';
-        const maskedPhone = telephone ? this.maskDestination(telephone) : 'n/a';
+        const { maskedEmail, maskedPhone } = this.getMaskedRegisterIdentifiers(emailProfessionnel, telephone);
         this.logger.log(`Register attempt channel=auth/register email=${maskedEmail} phone=${maskedPhone} role=${role}`);
         if (motDePasse !== confirmerMotDePasse) {
             this.logger.warn(`Register validation failed: password mismatch email=${maskedEmail} phone=${maskedPhone}`);
@@ -283,7 +296,7 @@ let AuthService = AuthService_1 = class AuthService {
         catch (error) {
             if (error instanceof typeorm_2.QueryFailedError) {
                 const driverError = error.driverError;
-                this.logger.error(`Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${driverError?.detail ?? 'n/a'}`, error.stack);
+                this.logger.error(`Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`, error.stack);
             }
             else if (error instanceof Error) {
                 this.logger.error(`Register unexpected error email=${maskedEmail} phone=${maskedPhone} role=${role} message=${error.message}`, error.stack);

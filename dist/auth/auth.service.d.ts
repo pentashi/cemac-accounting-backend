@@ -32,6 +32,8 @@ export declare class AuthService {
     constructor(usersRepository: Repository<User>, jwtService: JwtService, configService: ConfigService, auditLogService: AuditLogService, authMessageService: AuthMessageService, redisService: RedisService, encryptionService: EncryptionService);
     private genererCode;
     private maskDestination;
+    private getMaskedRegisterIdentifiers;
+    private sanitizeDriverErrorDetail;
     private findUserByPayload;
     private getStorageKey;
     private getRateLimitKey;
