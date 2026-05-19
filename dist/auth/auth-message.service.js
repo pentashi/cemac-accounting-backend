@@ -117,7 +117,7 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
             return this.twilioClient;
         }
         catch (err) {
-            this.logger.warn(`Twilio SDK is unavailable (${err.message}). Falling back to webhook/simulated delivery.`);
+            this.logger.warn(`Twilio SDK is unavailable (${err.message}).`);
             return null;
         }
     }
@@ -140,7 +140,7 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
     }
     async sendEmail(destination, subject, message) {
         if (!this.smtpTransporter || !this.smtpFrom) {
-            return { channel: 'email', destination, mode: 'simulated' };
+            throw new common_1.ServiceUnavailableException('Email delivery is not configured on the server.');
         }
         try {
             await this.smtpTransporter.sendMail({
@@ -152,18 +152,27 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
             return { channel: 'email', destination, mode: 'smtp' };
         }
         catch (err) {
-            this.logger.warn(`SMTP delivery failed (${err.message}). Falling back to simulated mode.`);
-            return { channel: 'email', destination, mode: 'simulated' };
+            this.logger.error(`SMTP delivery failed for ${destination}: ${err.message}`);
+            throw new common_1.BadGatewayException('SMTP delivery failed. Check mail server configuration and credentials.');
         }
     }
     async sendWebhookMessage(channel, destination, message) {
         const twilioClient = this.getTwilioClient();
-        if (twilioClient && this.twilioServiceSid) {
-            await twilioClient.messages.create({
-                body: message,
-                to: this.formatTwilioNumber(channel, destination),
-                messagingServiceSid: this.twilioServiceSid,
-            });
+        if (twilioClient) {
+            if (!this.twilioServiceSid) {
+                throw new common_1.ServiceUnavailableException('Twilio delivery is misconfigured on the server.');
+            }
+            try {
+                await twilioClient.messages.create({
+                    body: message,
+                    to: this.formatTwilioNumber(channel, destination),
+                    messagingServiceSid: this.twilioServiceSid,
+                });
+            }
+            catch (err) {
+                this.logger.error(`Twilio delivery failed for ${destination}: ${err.message}`);
+                throw new common_1.BadGatewayException('Twilio delivery failed. Check Twilio credentials, service SID, and destination.');
+            }
             return {
                 channel,
                 destination,
@@ -173,17 +182,26 @@ let AuthMessageService = AuthMessageService_1 = class AuthMessageService {
         const envKey = channel === 'sms' ? 'SMS_PROVIDER_URL' : 'WHATSAPP_PROVIDER_URL';
         const providerUrl = this.configService.get(envKey);
         if (!providerUrl) {
-            return {
-                channel,
-                destination,
-                mode: 'simulated',
-            };
+            throw new common_1.ServiceUnavailableException('Message delivery provider is not configured on the server.');
         }
-        await fetch(providerUrl, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ destination, message, channel }),
-        });
+        let response;
+        try {
+            response = await fetch(providerUrl, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ destination, message, channel }),
+            });
+        }
+        catch (err) {
+            this.logger.error(`Webhook delivery request failed for ${destination}: ${err.message}`);
+            throw new common_1.BadGatewayException('Webhook delivery request failed. Check provider URL availability.');
+        }
+        if (!response.ok) {
+            const contentLength = response.headers.get('content-length') ?? 'unknown';
+            const statusText = response.statusText || 'unknown';
+            this.logger.error(`Webhook delivery failed for ${destination}: status=${response.status} statusText=${statusText} contentLength=${contentLength}`);
+            throw new common_1.BadGatewayException(`Webhook delivery failed with status ${response.status}.`);
+        }
         return {
             channel,
             destination,

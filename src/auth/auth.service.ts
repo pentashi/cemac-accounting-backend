@@ -327,15 +327,16 @@ export class AuthService {
             driverError?: { code?: string; detail?: string; constraint?: string; table?: string };
           }
         ).driverError;
+        const pgCode: string | undefined = driverError?.code ?? (error as any).code;
 
         this.logger.error(
-          `Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`,
+          `Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${pgCode ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`,
           error.stack,
         );
 
-        if (driverError?.code === '23505') {
+        if (pgCode === '23505') {
           throw new ConflictException(
-            "Impossible de finaliser l'inscription: ces informations sont déjà utilisées.",
+            "Un compte avec cet email ou ce téléphone existe déjà.",
           );
         }
 
@@ -343,6 +344,17 @@ export class AuthService {
           "Erreur base de données lors de l'inscription.",
         );
       } else if (error instanceof Error) {
+        const pgCode: string | undefined = (error as any).code ?? (error as any).driverError?.code;
+
+        if (pgCode === '23505') {
+          this.logger.warn(
+            `Register duplicate key (non-QueryFailedError path) email=${maskedEmail} phone=${maskedPhone} role=${role}`,
+          );
+          throw new ConflictException(
+            "Un compte avec cet email ou ce téléphone existe déjà.",
+          );
+        }
+
         this.logger.error(
           `Register unexpected error email=${maskedEmail} phone=${maskedPhone} role=${role} message=${error.message}`,
           error.stack,
