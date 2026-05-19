@@ -299,6 +299,9 @@ let AuthService = AuthService_1 = class AuthService {
             return user;
         }
         catch (error) {
+            if (error instanceof common_1.HttpException) {
+                throw error;
+            }
             if (error instanceof typeorm_2.QueryFailedError) {
                 const driverError = error.driverError;
                 const pgCode = driverError?.code ?? error.code;
@@ -306,7 +309,11 @@ let AuthService = AuthService_1 = class AuthService {
                 if (pgCode === '23505') {
                     throw new common_1.ConflictException("Un compte avec cet email ou ce téléphone existe déjà.");
                 }
-                throw new common_1.InternalServerErrorException("Erreur base de données lors de l'inscription.");
+                const isDev = this.configService.get('NODE_ENV') !== 'production';
+                throw new common_1.InternalServerErrorException({
+                    message: "Erreur base de données lors de l'inscription.",
+                    ...(isDev && { details: error.message }),
+                });
             }
             else if (error instanceof Error) {
                 const pgCode = error.code ?? error.driverError?.code;
@@ -315,7 +322,11 @@ let AuthService = AuthService_1 = class AuthService {
                     throw new common_1.ConflictException("Un compte avec cet email ou ce téléphone existe déjà.");
                 }
                 this.logger.error(`Register unexpected error email=${maskedEmail} phone=${maskedPhone} role=${role} message=${error.message}`, error.stack);
-                throw new common_1.InternalServerErrorException("Erreur inattendue lors de l'inscription.");
+                const isDev2 = this.configService.get('NODE_ENV') !== 'production';
+                throw new common_1.InternalServerErrorException({
+                    message: "Erreur inattendue lors de l'inscription.",
+                    ...(isDev2 && { details: error.message }),
+                });
             }
             else {
                 this.logger.error(`Register unknown failure email=${maskedEmail} phone=${maskedPhone} role=${role}`);
