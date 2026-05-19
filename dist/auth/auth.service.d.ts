@@ -23,6 +23,7 @@ export declare class AuthService {
     private readonly authMessageService;
     private readonly redisService;
     private readonly encryptionService;
+    private readonly logger;
     private readonly otpPrefix;
     private readonly otpRateLimitPrefix;
     private readonly otpExpirySeconds;
