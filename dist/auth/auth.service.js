@@ -44,6 +44,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -58,7 +59,7 @@ const auth_message_service_1 = require("./auth-message.service");
 const redis_service_1 = require("../redis/redis.service");
 const encryption_service_1 = require("./encryption.service");
 const crypto_1 = require("crypto");
-let AuthService = class AuthService {
+let AuthService = AuthService_1 = class AuthService {
     usersRepository;
     jwtService;
     configService;
@@ -66,6 +67,7 @@ let AuthService = class AuthService {
     authMessageService;
     redisService;
     encryptionService;
+    logger = new common_1.Logger(AuthService_1.name);
     otpPrefix;
     otpRateLimitPrefix;
     otpExpirySeconds;
@@ -96,6 +98,20 @@ let AuthService = class AuthService {
             return `${visible}${'*'.repeat(Math.max(localPart.length - 2, 0))}@${domain}`;
         }
         return `${destination.slice(0, 3)}${'*'.repeat(Math.max(destination.length - 5, 0))}${destination.slice(-2)}`;
+    }
+    getMaskedRegisterIdentifiers(emailProfessionnel, telephone) {
+        return {
+            maskedEmail: emailProfessionnel ? this.maskDestination(emailProfessionnel) : 'n/a',
+            maskedPhone: telephone ? this.maskDestination(telephone) : 'n/a',
+        };
+    }
+    sanitizeDriverErrorDetail(detail) {
+        if (!detail) {
+            return 'n/a';
+        }
+        return detail
+            .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[email]')
+            .replace(/\+?\d[\d\s\-().]{6,}\d/g, '[phone]');
     }
     async findUserByPayload({ emailProfessionnel, telephone, canal }) {
         let user = null;
@@ -257,24 +273,43 @@ let AuthService = class AuthService {
         };
     }
     async register(raisonSociale, emailProfessionnel, telephone, motDePasse, confirmerMotDePasse, role = 'user') {
+        const { maskedEmail, maskedPhone } = this.getMaskedRegisterIdentifiers(emailProfessionnel, telephone);
+        this.logger.log(`Register attempt channel=auth/register email=${maskedEmail} phone=${maskedPhone} role=${role}`);
         if (motDePasse !== confirmerMotDePasse) {
+            this.logger.warn(`Register validation failed: password mismatch email=${maskedEmail} phone=${maskedPhone}`);
             throw new common_1.UnauthorizedException('Les mots de passe ne correspondent pas');
         }
-        const hashedPassword = await bcrypt.hash(motDePasse, 10);
-        const user = this.usersRepository.create({
-            raisonSociale,
-            emailProfessionnel,
-            telephone,
-            motDePasse: hashedPassword,
-            role,
-        });
-        await this.usersRepository.save(user);
-        await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
-        return user;
+        try {
+            const hashedPassword = await bcrypt.hash(motDePasse, 10);
+            const user = this.usersRepository.create({
+                raisonSociale,
+                emailProfessionnel,
+                telephone,
+                motDePasse: hashedPassword,
+                role,
+            });
+            await this.usersRepository.save(user);
+            await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
+            this.logger.log(`Register success userId=${user.id} email=${maskedEmail} phone=${maskedPhone} role=${role}`);
+            return user;
+        }
+        catch (error) {
+            if (error instanceof typeorm_2.QueryFailedError) {
+                const driverError = error.driverError;
+                this.logger.error(`Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`, error.stack);
+            }
+            else if (error instanceof Error) {
+                this.logger.error(`Register unexpected error email=${maskedEmail} phone=${maskedPhone} role=${role} message=${error.message}`, error.stack);
+            }
+            else {
+                this.logger.error(`Register unknown failure email=${maskedEmail} phone=${maskedPhone} role=${role}`);
+            }
+            throw error;
+        }
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,

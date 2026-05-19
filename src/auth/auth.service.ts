@@ -1,9 +1,9 @@
-import { Injectable, NotImplementedException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, NotImplementedException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuditLogService } from '../audit/audit-log.service';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { User } from '../user/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { AuthMessageService, DeliveryChannel } from './auth-message.service';
@@ -26,6 +26,7 @@ type CodePurpose = 'verification' | 'password_reset';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly otpPrefix: string;
   private readonly otpRateLimitPrefix: string;
   private readonly otpExpirySeconds: number;
@@ -71,6 +72,23 @@ export class AuthService {
     }
 
     return `${destination.slice(0, 3)}${'*'.repeat(Math.max(destination.length - 5, 0))}${destination.slice(-2)}`;
+  }
+
+  private getMaskedRegisterIdentifiers(emailProfessionnel?: string, telephone?: string) {
+    return {
+      maskedEmail: emailProfessionnel ? this.maskDestination(emailProfessionnel) : 'n/a',
+      maskedPhone: telephone ? this.maskDestination(telephone) : 'n/a',
+    };
+  }
+
+  private sanitizeDriverErrorDetail(detail?: string): string {
+    if (!detail) {
+      return 'n/a';
+    }
+
+    return detail
+      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[email]')
+      .replace(/\+?\d[\d\s\-().]{6,}\d/g, '[phone]');
   }
 
   private async findUserByPayload({ emailProfessionnel, telephone, canal }: CodeRequestPayload): Promise<User> {
@@ -265,19 +283,61 @@ export class AuthService {
   }
 
   async register(raisonSociale: string, emailProfessionnel: string, telephone: string, motDePasse: string, confirmerMotDePasse: string, role: 'admin' | 'user' = 'user') {
-    if (motDePasse !== confirmerMotDePasse) {
-      throw new UnauthorizedException('Les mots de passe ne correspondent pas');
-    }
-    const hashedPassword = await bcrypt.hash(motDePasse, 10);
-    const user = this.usersRepository.create({
-      raisonSociale,
+    const { maskedEmail, maskedPhone } = this.getMaskedRegisterIdentifiers(
       emailProfessionnel,
       telephone,
-      motDePasse: hashedPassword,
-      role,
-    });
-    await this.usersRepository.save(user);
-    await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
-    return user;
+    );
+
+    this.logger.log(
+      `Register attempt channel=auth/register email=${maskedEmail} phone=${maskedPhone} role=${role}`,
+    );
+
+    if (motDePasse !== confirmerMotDePasse) {
+      this.logger.warn(
+        `Register validation failed: password mismatch email=${maskedEmail} phone=${maskedPhone}`,
+      );
+      throw new UnauthorizedException('Les mots de passe ne correspondent pas');
+    }
+
+    try {
+      const hashedPassword = await bcrypt.hash(motDePasse, 10);
+      const user = this.usersRepository.create({
+        raisonSociale,
+        emailProfessionnel,
+        telephone,
+        motDePasse: hashedPassword,
+        role,
+      });
+      await this.usersRepository.save(user);
+      await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
+      this.logger.log(
+        `Register success userId=${user.id} email=${maskedEmail} phone=${maskedPhone} role=${role}`,
+      );
+      return user;
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const driverError = (
+          error as QueryFailedError & {
+            driverError?: { code?: string; detail?: string; constraint?: string; table?: string };
+          }
+        ).driverError;
+
+        this.logger.error(
+          `Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`,
+          error.stack,
+        );
+      } else if (error instanceof Error) {
+        this.logger.error(
+          `Register unexpected error email=${maskedEmail} phone=${maskedPhone} role=${role} message=${error.message}`,
+          error.stack,
+        );
+      } else {
+        this.logger.error(
+          `Register unknown failure email=${maskedEmail} phone=${maskedPhone} role=${role}`,
+        );
+      }
+
+      throw error;
+    }
   }
 }
