@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { type Transporter } from 'nodemailer';
@@ -9,7 +14,7 @@ export type DeliveryPurpose = 'verification' | 'password_reset';
 export interface DeliveryResult {
   channel: DeliveryChannel;
   destination: string;
-  mode: 'smtp' | 'twilio' | 'webhook' | 'simulated';
+  mode: 'smtp' | 'twilio' | 'webhook';
 }
 
 interface TwilioMessageClient {
@@ -119,7 +124,7 @@ export class AuthMessageService {
       return this.twilioClient;
     } catch (err) {
       this.logger.warn(
-        `Twilio SDK is unavailable (${(err as Error).message}). Falling back to webhook/simulated delivery.`,
+        `Twilio SDK is unavailable (${(err as Error).message}).`,
       );
       return null;
     }
@@ -163,7 +168,9 @@ export class AuthMessageService {
     message: string,
   ): Promise<DeliveryResult> {
     if (!this.smtpTransporter || !this.smtpFrom) {
-      return { channel: 'email', destination, mode: 'simulated' };
+      throw new ServiceUnavailableException(
+        'Email delivery is not configured on the server.',
+      );
     }
 
     try {
@@ -175,10 +182,12 @@ export class AuthMessageService {
       });
       return { channel: 'email', destination, mode: 'smtp' };
     } catch (err) {
-      this.logger.warn(
-        `SMTP delivery failed (${(err as Error).message}). Falling back to simulated mode.`,
+      this.logger.error(
+        `SMTP delivery failed for ${destination}: ${(err as Error).message}`,
       );
-      return { channel: 'email', destination, mode: 'simulated' };
+      throw new BadGatewayException(
+        'SMTP delivery failed. Check mail server configuration and credentials.',
+      );
     }
   }
 
@@ -189,12 +198,27 @@ export class AuthMessageService {
   ): Promise<DeliveryResult> {
     const twilioClient = this.getTwilioClient();
 
-    if (twilioClient && this.twilioServiceSid) {
-      await twilioClient.messages.create({
-        body: message,
-        to: this.formatTwilioNumber(channel, destination),
-        messagingServiceSid: this.twilioServiceSid,
-      });
+    if (twilioClient) {
+      if (!this.twilioServiceSid) {
+        throw new ServiceUnavailableException(
+          'Twilio delivery is misconfigured on the server.',
+        );
+      }
+
+      try {
+        await twilioClient.messages.create({
+          body: message,
+          to: this.formatTwilioNumber(channel, destination),
+          messagingServiceSid: this.twilioServiceSid,
+        });
+      } catch (err) {
+        this.logger.error(
+          `Twilio delivery failed for ${destination}: ${(err as Error).message}`,
+        );
+        throw new BadGatewayException(
+          'Twilio delivery failed. Check Twilio credentials, service SID, and destination.',
+        );
+      }
 
       return {
         channel,
@@ -208,18 +232,37 @@ export class AuthMessageService {
     const providerUrl = this.configService.get<string>(envKey);
 
     if (!providerUrl) {
-      return {
-        channel,
-        destination,
-        mode: 'simulated',
-      };
+      throw new ServiceUnavailableException(
+        'Message delivery provider is not configured on the server.',
+      );
     }
 
-    await fetch(providerUrl, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ destination, message, channel }),
-    });
+    let response: Awaited<ReturnType<typeof fetch>>;
+    try {
+      response = await fetch(providerUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ destination, message, channel }),
+      });
+    } catch (err) {
+      this.logger.error(
+        `Webhook delivery request failed for ${destination}: ${(err as Error).message}`,
+      );
+      throw new BadGatewayException(
+        'Webhook delivery request failed. Check provider URL availability.',
+      );
+    }
+
+    if (!response.ok) {
+      const contentLength = response.headers.get('content-length') ?? 'unknown';
+      const statusText = response.statusText || 'unknown';
+      this.logger.error(
+        `Webhook delivery failed for ${destination}: status=${response.status} statusText=${statusText} contentLength=${contentLength}`,
+      );
+      throw new BadGatewayException(
+        `Webhook delivery failed with status ${response.status}.`,
+      );
+    }
 
     return {
       channel,
