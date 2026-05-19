@@ -289,22 +289,38 @@ let AuthService = AuthService_1 = class AuthService {
                 role,
             });
             await this.usersRepository.save(user);
-            await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
+            try {
+                await this.auditLogService.log(user.id, 'register', 'User', String(user.id));
+            }
+            catch (auditError) {
+                this.logger.error(`Register audit log failed userId=${user.id} email=${maskedEmail} phone=${maskedPhone} message=${auditError instanceof Error ? auditError.message : 'unknown'}`);
+            }
             this.logger.log(`Register success userId=${user.id} email=${maskedEmail} phone=${maskedPhone} role=${role}`);
             return user;
         }
         catch (error) {
             if (error instanceof typeorm_2.QueryFailedError) {
                 const driverError = error.driverError;
-                this.logger.error(`Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${driverError?.code ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`, error.stack);
+                const pgCode = driverError?.code ?? error.code;
+                this.logger.error(`Register database error email=${maskedEmail} phone=${maskedPhone} role=${role} dbCode=${pgCode ?? 'unknown'} constraint=${driverError?.constraint ?? 'unknown'} table=${driverError?.table ?? 'unknown'} detail=${this.sanitizeDriverErrorDetail(driverError?.detail)}`, error.stack);
+                if (pgCode === '23505') {
+                    throw new common_1.ConflictException("Un compte avec cet email ou ce téléphone existe déjà.");
+                }
+                throw new common_1.InternalServerErrorException("Erreur base de données lors de l'inscription.");
             }
             else if (error instanceof Error) {
+                const pgCode = error.code ?? error.driverError?.code;
+                if (pgCode === '23505') {
+                    this.logger.warn(`Register duplicate key (non-QueryFailedError path) email=${maskedEmail} phone=${maskedPhone} role=${role}`);
+                    throw new common_1.ConflictException("Un compte avec cet email ou ce téléphone existe déjà.");
+                }
                 this.logger.error(`Register unexpected error email=${maskedEmail} phone=${maskedPhone} role=${role} message=${error.message}`, error.stack);
+                throw new common_1.InternalServerErrorException("Erreur inattendue lors de l'inscription.");
             }
             else {
                 this.logger.error(`Register unknown failure email=${maskedEmail} phone=${maskedPhone} role=${role}`);
+                throw new common_1.InternalServerErrorException("Erreur inconnue lors de l'inscription.");
             }
-            throw error;
         }
     }
 };
