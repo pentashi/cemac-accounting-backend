@@ -28,8 +28,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
         : undefined,
   });
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
-  const fromAddress =
-    process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME;
+  const fromAddress = process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME;
   if (!fromAddress) {
     return;
   }

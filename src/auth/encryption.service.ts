@@ -24,8 +24,7 @@ export class EncryptionService {
 
   constructor(private readonly configService: ConfigService) {
     this.algorithm =
-      this.configService.get<string>('OTP_ENCRYPTION_ALGORITHM') ??
-      'aes-256-gcm';
+      this.configService.get<string>('OTP_ENCRYPTION_ALGORITHM') ?? 'aes-256-gcm';
     const configuredKey = this.configService.get<string>('OTP_ENCRYPTION_KEY');
     if (configuredKey && !/^[0-9a-fA-F]{64}$/.test(configuredKey)) {
       throw new Error(
@@ -122,10 +121,7 @@ export class EncryptionService {
 
     const decipher = createDecipheriv(this.algorithm, key, iv) as DecipherGCM;
     decipher.setAuthTag(tag);
-    const decrypted = Buffer.concat([
-      decipher.update(encrypted),
-      decipher.final(),
-    ]);
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
     return decrypted.toString('utf8');
   }
 }

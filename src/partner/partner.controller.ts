@@ -1,43 +1,14 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Req,
-  Res,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOperation,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PartnerService } from './partner.service';
-import {
-  CreateClientDto,
-  CreateFournisseurDto,
-  UpdateClientDto,
-  UpdateFournisseurDto,
-} from './partner.dto';
+import { CreateClientDto, CreateFournisseurDto, UpdateClientDto, UpdateFournisseurDto } from './partner.dto';
 import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { FactureService } from '../invoice/facture.service';
-import {
-  CreateFactureDto,
-  RegisterInvoicePaymentDto,
-} from '../invoice/facture.dto';
+import { CreateFactureDto, RegisterInvoicePaymentDto } from '../invoice/facture.dto';
 
 @ApiTags('Partners')
 @Controller('partner')
@@ -87,31 +58,15 @@ export class PartnerController {
   @Post('client/:id/factures')
   @Roles('admin', 'user')
   @ApiBody({ type: CreateFactureDto })
-  createClientInvoice(
-    @Param('id') id: string,
-    @Body() dto: CreateFactureDto,
-    @Req() req: any,
-  ) {
-    return this.factureService.createFacture(
-      { ...dto, clientId: Number(id) },
-      req.user.id,
-    );
+  createClientInvoice(@Param('id') id: string, @Body() dto: CreateFactureDto, @Req() req: any) {
+    return this.factureService.createFacture({ ...dto, clientId: Number(id) }, req.user.id);
   }
 
   @Post('client/:clientId/factures/:factureId/paiements')
   @Roles('admin', 'user')
   @ApiBody({ type: RegisterInvoicePaymentDto })
-  registerClientPayment(
-    @Param('clientId') clientId: string,
-    @Param('factureId') factureId: string,
-    @Body() dto: RegisterInvoicePaymentDto,
-    @Req() req: any,
-  ) {
-    return this.factureService.registerPayment(
-      Number(factureId),
-      { ...dto, clientId: Number(clientId) },
-      req.user.id,
-    );
+  registerClientPayment(@Param('clientId') clientId: string, @Param('factureId') factureId: string, @Body() dto: RegisterInvoicePaymentDto, @Req() req: any) {
+    return this.factureService.registerPayment(Number(factureId), { ...dto, clientId: Number(clientId) }, req.user.id);
   }
 
   @Get('client/export')
@@ -124,8 +79,7 @@ export class PartnerController {
     @Res() res: Response,
     @Req() req: any,
   ) {
-    const { buffer, filename, contentType } =
-      await this.partnerService.exportClients(format, req.user.id);
+    const { buffer, filename, contentType } = await this.partnerService.exportClients(format, req.user.id);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
     return res.send(buffer);
@@ -135,17 +89,9 @@ export class PartnerController {
   @Roles('admin')
   @ApiOperation({ summary: 'Import clients from CSV file' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: { file: { type: 'string', format: 'binary' } },
-    },
-  })
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
   @UseInterceptors(FileInterceptor('file'))
-  async importClients(
-    @UploadedFile() file: Express.Multer.File,
-    @Req() req: any,
-  ) {
+  async importClients(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     return this.partnerService.importClients(file, req.user.id);
   }
 
@@ -175,10 +121,7 @@ export class PartnerController {
   @Patch('fournisseur/:id')
   @Roles('admin')
   @ApiBody({ type: UpdateFournisseurDto })
-  updateFournisseur(
-    @Param('id') id: string,
-    @Body() dto: UpdateFournisseurDto,
-  ) {
+  updateFournisseur(@Param('id') id: string, @Body() dto: UpdateFournisseurDto) {
     return this.partnerService.updateFournisseur(Number(id), dto);
   }
 
@@ -198,8 +141,7 @@ export class PartnerController {
     @Res() res: Response,
     @Req() req: any,
   ) {
-    const { buffer, filename, contentType } =
-      await this.partnerService.exportFournisseurs(format, req.user.id);
+    const { buffer, filename, contentType } = await this.partnerService.exportFournisseurs(format, req.user.id);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
     return res.send(buffer);
@@ -209,17 +151,9 @@ export class PartnerController {
   @Roles('admin')
   @ApiOperation({ summary: 'Import suppliers from CSV file' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: { file: { type: 'string', format: 'binary' } },
-    },
-  })
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
   @UseInterceptors(FileInterceptor('file'))
-  async importFournisseurs(
-    @UploadedFile() file: Express.Multer.File,
-    @Req() req: any,
-  ) {
+  async importFournisseurs(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     return this.partnerService.importFournisseurs(file, req.user.id);
   }
 }

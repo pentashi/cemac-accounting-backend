@@ -40,10 +40,7 @@ let AuthController = class AuthController {
         return this.authService.envoyerCodeVerification(body);
     }
     async verifierCode(body) {
-        return this.authService.verifierCode({
-            emailProfessionnel: body.emailProfessionnel,
-            telephone: body.telephone,
-        }, body.code);
+        return this.authService.verifierCode({ emailProfessionnel: body.emailProfessionnel, telephone: body.telephone }, body.code);
     }
     async demanderResetMdp(body) {
         return this.authService.demanderResetMdp(body);
@@ -97,20 +94,14 @@ __decorate([
 ], AuthController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Post)('envoyer-code-verification'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Envoyer un code de vérification par email, SMS ou WhatsApp',
-    }),
+    (0, swagger_1.ApiOperation)({ summary: 'Envoyer un code de vérification par email, SMS ou WhatsApp' }),
     (0, swagger_1.ApiBody)({
         schema: {
             type: 'object',
             properties: {
                 emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
                 telephone: { type: 'string', example: '+33612345678' },
-                canal: {
-                    type: 'string',
-                    enum: ['email', 'whatsapp', 'sms'],
-                    example: 'email',
-                },
+                canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
             },
             required: ['canal'],
         },
@@ -141,20 +132,14 @@ __decorate([
 ], AuthController.prototype, "verifierCode", null);
 __decorate([
     (0, common_1.Post)('demander-reset-mdp'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Demander un code de réinitialisation du mot de passe',
-    }),
+    (0, swagger_1.ApiOperation)({ summary: 'Demander un code de réinitialisation du mot de passe' }),
     (0, swagger_1.ApiBody)({
         schema: {
             type: 'object',
             properties: {
                 emailProfessionnel: { type: 'string', example: 'contact@abc.com' },
                 telephone: { type: 'string', example: '+33612345678' },
-                canal: {
-                    type: 'string',
-                    enum: ['email', 'whatsapp', 'sms'],
-                    example: 'email',
-                },
+                canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
             },
             required: ['canal'],
         },
@@ -175,11 +160,7 @@ __decorate([
                 telephone: { type: 'string', example: '+33612345678' },
                 code: { type: 'string', example: '123456' },
                 nouveauMotDePasse: { type: 'string', example: 'NouveauP@ssw0rd' },
-                canal: {
-                    type: 'string',
-                    enum: ['email', 'whatsapp', 'sms'],
-                    example: 'email',
-                },
+                canal: { type: 'string', enum: ['email', 'whatsapp', 'sms'], example: 'email' },
             },
             required: ['code', 'nouveauMotDePasse', 'canal'],
         },

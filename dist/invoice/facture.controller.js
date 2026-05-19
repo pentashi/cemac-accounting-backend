@@ -145,12 +145,7 @@ __decorate([
     (0, roles_decorator_1.Roles)('admin', 'user'),
     (0, swagger_1.ApiOperation)({ summary: 'Exporter une facture' }),
     (0, swagger_1.ApiParam)({ name: 'id', type: 'string', description: 'ID de la facture' }),
-    (0, swagger_1.ApiQuery)({
-        name: 'format',
-        enum: ['pdf', 'excel', 'csv'],
-        required: false,
-        description: 'Format du fichier exporté',
-    }),
+    (0, swagger_1.ApiQuery)({ name: 'format', enum: ['pdf', 'excel', 'csv'], required: false, description: 'Format du fichier exporté' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Fichier exporté.' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Query)('format')),

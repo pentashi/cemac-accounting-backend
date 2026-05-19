@@ -1,33 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FactureService } from './facture.service';
-import {
-  CreateFactureDto,
-  FactureCalculDto,
-  RegisterInvoicePaymentDto,
-  UpdateFactureDto,
-  UpdateFactureStatusDto,
-} from './facture.dto';
+import { CreateFactureDto, FactureCalculDto, RegisterInvoicePaymentDto, UpdateFactureDto, UpdateFactureStatusDto } from './facture.dto';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import type { Response } from 'express';
@@ -75,37 +49,21 @@ export class FactureController {
   @Patch(':id')
   @Roles('admin', 'user')
   @ApiBody({ type: UpdateFactureDto })
-  update(
-    @Param('id') id: string,
-    @Body() dto: UpdateFactureDto,
-    @Req() req: any,
-  ) {
+  update(@Param('id') id: string, @Body() dto: UpdateFactureDto, @Req() req: any) {
     return this.factureService.updateFacture(Number(id), dto, req.user.id);
   }
 
   @Patch(':id/status')
   @Roles('admin', 'user')
   @ApiBody({ type: UpdateFactureStatusDto })
-  updateStatus(
-    @Param('id') id: string,
-    @Body() dto: UpdateFactureStatusDto,
-    @Req() req: any,
-  ) {
-    return this.factureService.updateStatus(
-      Number(id),
-      dto.statut,
-      req.user.id,
-    );
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateFactureStatusDto, @Req() req: any) {
+    return this.factureService.updateStatus(Number(id), dto.statut, req.user.id);
   }
 
   @Post(':id/payments')
   @Roles('admin', 'user')
   @ApiBody({ type: RegisterInvoicePaymentDto })
-  registerPayment(
-    @Param('id') id: string,
-    @Body() dto: RegisterInvoicePaymentDto,
-    @Req() req: any,
-  ) {
+  registerPayment(@Param('id') id: string, @Body() dto: RegisterInvoicePaymentDto, @Req() req: any) {
     return this.factureService.registerPayment(Number(id), dto, req.user.id);
   }
 
@@ -119,12 +77,7 @@ export class FactureController {
   @Roles('admin', 'user')
   @ApiOperation({ summary: 'Exporter une facture' })
   @ApiParam({ name: 'id', type: 'string', description: 'ID de la facture' })
-  @ApiQuery({
-    name: 'format',
-    enum: ['pdf', 'excel', 'csv'],
-    required: false,
-    description: 'Format du fichier exporté',
-  })
+  @ApiQuery({ name: 'format', enum: ['pdf', 'excel', 'csv'], required: false, description: 'Format du fichier exporté' })
   @ApiResponse({ status: 200, description: 'Fichier exporté.' })
   async exportInvoice(
     @Param('id') id: string,
@@ -132,16 +85,10 @@ export class FactureController {
     @Res() res: Response,
     @Req() req: any,
   ) {
-    const { buffer, filename, contentType } =
-      await this.factureService.exportInvoice(Number(id), format);
+    const { buffer, filename, contentType } = await this.factureService.exportInvoice(Number(id), format);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', contentType);
-    await this.auditLogService.log(
-      req.user.id,
-      `export_invoice_${format}`,
-      'Facture',
-      id,
-    );
+    await this.auditLogService.log(req.user.id, `export_invoice_${format}`, 'Facture', id);
     return res.send(buffer);
   }
 }

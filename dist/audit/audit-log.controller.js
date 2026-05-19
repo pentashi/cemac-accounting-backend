@@ -34,13 +34,7 @@ let AuditLogController = class AuditLogController {
         });
     }
     findMine(req, entity, entityId, action, from, to) {
-        return this.auditLogService.findForUser(req.user.id, {
-            entity,
-            entityId,
-            action,
-            from,
-            to,
-        });
+        return this.auditLogService.findForUser(req.user.id, { entity, entityId, action, from, to });
     }
     findOne(id) {
         return this.auditLogService.findOne(Number(id));
