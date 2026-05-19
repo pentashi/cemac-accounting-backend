@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, Logger, NotImplementedException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, InternalServerErrorException, Logger, NotImplementedException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuditLogService } from '../audit/audit-log.service';
 import { JwtService } from '@nestjs/jwt';
@@ -321,6 +321,10 @@ export class AuthService {
       );
       return user;
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       if (error instanceof QueryFailedError) {
         const driverError = (
           error as QueryFailedError & {
@@ -340,9 +344,11 @@ export class AuthService {
           );
         }
 
-        throw new InternalServerErrorException(
-          "Erreur base de données lors de l'inscription.",
-        );
+        const isDev = this.configService.get<string>('NODE_ENV') !== 'production';
+        throw new InternalServerErrorException({
+          message: "Erreur base de données lors de l'inscription.",
+          ...(isDev && { details: error.message }),
+        });
       } else if (error instanceof Error) {
         const pgCode: string | undefined = (error as any).code ?? (error as any).driverError?.code;
 
@@ -360,9 +366,11 @@ export class AuthService {
           error.stack,
         );
 
-        throw new InternalServerErrorException(
-          "Erreur inattendue lors de l'inscription.",
-        );
+        const isDev2 = this.configService.get<string>('NODE_ENV') !== 'production';
+        throw new InternalServerErrorException({
+          message: "Erreur inattendue lors de l'inscription.",
+          ...(isDev2 && { details: error.message }),
+        });
       } else {
         this.logger.error(
           `Register unknown failure email=${maskedEmail} phone=${maskedPhone} role=${role}`,
