@@ -1,94 +1,217 @@
-# CEMAC-Compliant Accounting Backend
+# CEMAC Accounting Backend
+Production-ready NestJS backend for CEMAC-aligned accounting workflows, invoicing, reporting, and auditability.
 
-This project is a modular, production-grade backend for CEMAC-compliant accounting management, built with NestJS, TypeORM, and PostgreSQL. It is designed for enterprise use, with a focus on security, auditability, and extensibility.
+## Badges
+[![Build Status](https://github.com/pentashi/cemac-accounting-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/pentashi/cemac-accounting-backend/actions/workflows/ci.yml)
+![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)
+![License](https://img.shields.io/badge/license-UNLICENSED-lightgrey.svg)
+![Coverage](https://img.shields.io/badge/coverage-not%20published-lightgrey.svg)
+
+## Overview
+CEMAC Accounting Backend is a modular API built with NestJS, TypeORM, and PostgreSQL.
+It centralizes invoice lifecycle management, partner management, accounting entries, user authentication, and audit logs in one service.
+The project exists to give accounting teams and product teams a backend that is compliant-oriented, extensible, and observable in production.
+It is for engineering teams building finance platforms for CEMAC markets.
 
 ## Key Features
+- Enforces JWT auth plus role-based access control for admin/user permissions.
+- Supports full invoice lifecycle: calculate, create, update status, register payments, and export.
+- Manages clients and suppliers with CSV import and PDF/Excel/CSV export.
+- Produces accounting statements (balance, balance sheet, income statement) and date/account/type filtering.
+- Captures audit trails for login, registration, exports, and reporting actions.
+- Delivers OTP verification and password reset codes through SMTP, Twilio, or webhook providers.
+- Exposes OpenAPI/Swagger docs for faster integration and API validation.
 
-- Secure JWT authentication with RBAC (admin/user roles)
-- Modular architecture: invoices, partners, accounting, reporting, audit, notifications
-- Comprehensive audit logging (login, CRUD, exports)
-- Export/import for invoices, accounting entries, and partners (PDF, Excel, CSV)
-- Password reset with email integration
-- Notification system for key events
-- Swagger API documentation at `/api-docs`
-- Unit and e2e test coverage
+## Architecture Overview
+```text
+Clients (Web/Mobile/Admin)
+        |
+        v
+   NestJS API (Controllers + Guards)
+        |
+        +--> Auth + OTP (JWT, Redis, EncryptionService, AuthMessageService)
+        +--> Domain Modules (Invoice, Partner, Accounting, Reporting, Settings, Notifications)
+        +--> Audit Module (cross-cutting action logging)
+        |
+        v
+ PostgreSQL (TypeORM entities)
+        |
+        +--> Redis (OTP/rate-limit store; in-memory fallback when Redis host is not set)
+        +--> SMTP / Twilio / Webhook providers (message delivery)
+```
 
-## Getting Started
+## Prerequisites
+- Node.js 18+
+- npm 9+
+- PostgreSQL 13+
+- Redis (recommended for OTP durability and shared rate limiting)
 
-### Prerequisites
-- Node.js >= 18
-- PostgreSQL >= 13
-
-### Installation
-
+## Installation & Quick Start
 ```bash
+git clone https://github.com/pentashi/cemac-accounting-backend.git
+cd cemac-accounting-backend
 npm install
-```
-
-### Environment Setup
-
-Create a `.env` file in the root directory with the following variables:
-
-```
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=youruser
-DB_PASSWORD=yourpassword
-DB_NAME=cemac_db
-JWT_SECRET=replace-with-a-long-random-secret
-JWT_EXPIRES_IN=3600s
-# Optional explicit override for TypeORM schema auto-sync (production default is already false).
-DB_SYNCHRONIZE=false
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=your-email@gmail.com
-FRONTEND_URL=http://localhost:3000
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=replace-with-your-twilio-auth-token
-TWILIO_SMS_FROM=+1234567890
-TWILIO_WHATSAPP_FROM=+14155238886
-SMS_PROVIDER_URL=
-WHATSAPP_PROVIDER_URL=
-```
-
-For local setup, copy `.env.example` to `.env` and fill in your real credentials. Do not commit real secrets.
-
-### Database
-- Run migrations or let TypeORM auto-sync entities (recommended for development only).
-
-### Running the App
-
-```bash
+cp .env.example .env
 npm run start:dev
 ```
 
-For production-style startup (used by `npm run start`), the app builds first and runs `dist/main`.
+Open Swagger UI at `http://localhost:3000/api-docs`.
 
-### API Documentation
-- Swagger UI: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+## Configuration
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `PORT` | number | `3000` | HTTP port for the NestJS server. |
+| `NODE_ENV` | string | `development` | Environment mode used for runtime behavior (for example DB sync default). |
+| `DB_HOST` | string | - | PostgreSQL host. |
+| `DB_PORT` | number | `5432` | PostgreSQL port. |
+| `DB_USER` | string | - | PostgreSQL username. |
+| `DB_PASSWORD` | string | - | PostgreSQL password. |
+| `DB_NAME` | string | - | PostgreSQL database name. |
+| `DB_SYNCHRONIZE` | boolean | `true` outside production | Explicit TypeORM schema sync override. |
+| `JWT_SECRET` | string | `defaultsecret` in JWT strategy fallback | JWT signing secret (required in production). |
+| `JWT_EXPIRES_IN` | string | - | JWT token TTL passed to `jsonwebtoken` (example: `3600s`). |
+| `MAIL_HOST` | string | - | SMTP server host. |
+| `MAIL_PORT` | number | `587` | SMTP server port. |
+| `MAIL_SECURE` | boolean | `true` when port is `465`, else `false` | SMTP TLS mode. |
+| `MAIL_USERNAME` | string | - | SMTP auth username and fallback sender address. |
+| `MAIL_PASSWORD` | string | - | SMTP auth password. |
+| `MAIL_FROM_NAME` | string | empty | Sender display name. |
+| `MAIL_FROM_ADDRESS` | string | `MAIL_USERNAME` | Sender email address. |
+| `FRONTEND_URL` | string | `http://localhost:3000` | Base URL used in password reset links. |
+| `TWILIO_ACCOUNT_SID` | string | - | Twilio account SID for SMS/WhatsApp delivery. |
+| `TWILIO_AUTH_TOKEN` | string | - | Twilio auth token. |
+| `TWILIO_SERVICE_SID` | string | - | Twilio Messaging Service SID. |
+| `SMS_PROVIDER_URL` | string | - | Webhook fallback endpoint for SMS delivery when Twilio is unavailable. |
+| `WHATSAPP_PROVIDER_URL` | string | - | Webhook fallback endpoint for WhatsApp delivery when Twilio is unavailable. |
+| `REDIS_HOST` | string | unset | Redis host; when unset, OTP storage uses in-memory fallback. |
+| `REDIS_PORT` | number | `6379` | Redis port. |
+| `REDIS_USER` | string | empty | Redis username. |
+| `REDIS_PASSWORD` | string | empty | Redis password. |
+| `REDIS_TTL` | number | `3600` | Default Redis TTL for key writes in seconds. |
+| `OTP_ENCRYPTION_ALGORITHM` | string | `aes-256-gcm` | OTP encryption algorithm. |
+| `OTP_ENCRYPTION_KEY` | hex string | derived from `JWT_SECRET` if missing | 64-char hex key for OTP encryption. |
+| `OTP_ENCRYPTION_FALLBACK_SALT` | string | SHA-256-derived value from JWT secret | Salt used when deriving OTP key from JWT secret. |
+| `OTP_IV_LENGTH` | number | `16` | IV byte length for OTP encryption payloads. |
+| `OTP_SALT_LENGTH` | number | `64` | Salt byte length used in OTP key derivation. |
+| `OTP_TAG_LENGTH` | number | `16` | GCM auth tag byte length. |
+| `OTP_KEY_LENGTH` | number | `32` | Derived key length in bytes. |
+| `OTP_PBKDF2_ITERATIONS` | number | `100000` | PBKDF2 iteration count for OTP encryption/decryption. |
+| `OTP_EXPIRY` | number | `300` | OTP expiration in seconds. |
+| `OTP_MAX_ATTEMPTS` | number | `3` | Max resend attempts in rate limit window. |
+| `OTP_PREFIX` | string | `otp:` | Redis key prefix for OTP payloads. |
+| `OTP_RATE_LIMIT_PREFIX` | string | `rate_limit:` | Redis key prefix for OTP request counters. |
+| `OTP_RATE_LIMIT_WINDOW` | number | `900` | OTP rate-limit window in seconds. |
 
-### Testing
-- Unit tests: `npm run test`
-- E2E tests: `npm run test:e2e`
+## Usage Examples
+### 1) Register, verify account, and log in
+```bash
+# Register
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "raisonSociale":"ACME SARL",
+    "emailProfessionnel":"finance@acme.cm",
+    "telephone":"+237600000000",
+    "motDePasse":"StrongP@ssw0rd",
+    "confirmerMotDePasse":"StrongP@ssw0rd",
+    "role":"user"
+  }'
 
-## Project Structure
-- `src/auth` - Authentication & RBAC
-- `src/invoice` - Invoicing
-- `src/partner` - Clients & Suppliers
-- `src/accounting` - Accounting entries
-- `src/reporting` - Dashboards & statistics
-- `src/audit` - Audit logging
-- `src/notification` - Notifications
+# Send verification code (manual step)
+curl -X POST http://localhost:3000/auth/envoyer-code-verification \
+  -H "Content-Type: application/json" \
+  -d '{"emailProfessionnel":"finance@acme.cm","canal":"email"}'
 
-## Security & Production
+# Verify received code
+curl -X POST http://localhost:3000/auth/verifier-code \
+  -H "Content-Type: application/json" \
+  -d '{"emailProfessionnel":"finance@acme.cm","code":"123456"}'
 
-- Use strong secrets and secure environment variables in production
-- Set up HTTPS and proper CORS policies
-- Regularly review audit logs for compliance
-- Run all tests and monitor code coverage
+# Login
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"emailProfessionnel":"finance@acme.cm","motDePasse":"StrongP@ssw0rd"}'
+```
+
+### 2) Create an invoice with bearer auth
+```bash
+TOKEN="<paste-access-token>"
+AUTH_HEADER="Authorization: ******"
+
+curl -X POST http://localhost:3000/facture \
+  -H "${AUTH_HEADER}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reference":"FAC-2026-0001",
+    "clientId":1,
+    "dateEmission":"2026-05-01",
+    "dateEcheance":"2026-05-31",
+    "devise":"XAF",
+    "lignes":[
+      {"description":"Audit comptable","quantite":1,"prixUnitaire":150000,"tva":19.25}
+    ]
+  }'
+```
+
+### 3) Export accounting entries
+```bash
+TOKEN="<paste-access-token>"
+AUTH_HEADER="Authorization: ******"
+
+curl -L "http://localhost:3000/ecriture/export?format=csv" \
+  -H "${AUTH_HEADER}" \
+  -o ecritures.csv
+```
+
+## API Reference
+- Interactive OpenAPI docs: `GET /api-docs`
+- Authentication: bearer JWT in the `Authorization` header.
+
+Core route groups:
+- `POST /auth/*` — authentication, account verification, password reset
+- `GET|POST|PATCH|DELETE /users/*` — user lifecycle and profile updates
+- `GET|POST|PATCH|DELETE /facture/*` — invoice lifecycle and exports
+- `GET|POST|PATCH|DELETE /partner/*` — client/supplier management and import/export
+- `GET|POST /ecriture/*` — accounting entries, statements, and exports
+- `GET /reporting/*` — sales, purchases, and performance reports
+- `GET /audit-logs/*` — audit trail retrieval
+- `GET|POST|PATCH /notifications/*` — user notifications
+- `GET|PUT /settings` — application settings
+
+## Testing
+Run locally:
+```bash
+npm test -- --runInBand
+npm run test:e2e
+npm run test:cov
+npm run build
+```
+
+## Deployment
+- Set `NODE_ENV=production` and explicitly set `DB_SYNCHRONIZE=false`.
+- Inject secrets through a secure secret manager; never bake secrets into images.
+- Use managed PostgreSQL with automated backups and point-in-time recovery.
+- Use Redis in production for OTP consistency across instances.
+- Enforce TLS at the ingress/load balancer and restrict CORS origins.
+- Add centralized log aggregation and alerting for authentication and audit events.
+- Run CI (`npm test`, `npm run build`) on every merge to `main`.
+
+## Contributing
+1. Create a branch from `main` using: `feature/<ticket-or-scope>-<short-description>`.
+2. Keep changes scoped and atomic; update tests and docs when behavior changes.
+3. Run `npm run build` and `npm test -- --runInBand` before opening a PR.
+4. Open a pull request with a clear summary, risk notes, and rollback plan.
+5. Request at least one review before merge.
+
+Code standards:
+- TypeScript + NestJS conventions.
+- ESLint + Prettier via repository scripts.
+- Keep API contracts explicit through DTOs and Swagger decorators.
+
+## Security
+Report vulnerabilities through GitHub Security Advisories for this repository.
+Do not open public issues for security defects that expose exploitable details.
+Include reproduction steps, impact assessment, and suggested remediation when reporting.
 
 ## License
-
-MIT
+UNLICENSED
