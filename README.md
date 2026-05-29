@@ -61,7 +61,7 @@ Open Swagger UI at `http://localhost:3000/api-docs`.
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `PORT` | number | `3000` | HTTP port for the NestJS server. |
-| `NODE_ENV` | string | `development` | Environment mode used for runtime behavior (for example DB sync default). |
+| `NODE_ENV` | string | `development` | Environment mode used for runtime behavior (e.g., DB sync default). |
 | `DB_HOST` | string | - | PostgreSQL host. |
 | `DB_PORT` | number | `5432` | PostgreSQL port. |
 | `DB_USER` | string | - | PostgreSQL username. |
@@ -135,11 +135,9 @@ curl -X POST http://localhost:3000/auth/login \
 
 ### 2) Create an invoice with bearer auth
 ```bash
-TOKEN="<paste-access-token>"
-AUTH_HEADER="Authorization: ******"
-
+# Replace <bearer-token-header> with a valid bearer auth header
 curl -X POST http://localhost:3000/facture \
-  -H "${AUTH_HEADER}" \
+  -H "<bearer-token-header>" \
   -H "Content-Type: application/json" \
   -d '{
     "reference":"FAC-2026-0001",
@@ -155,11 +153,9 @@ curl -X POST http://localhost:3000/facture \
 
 ### 3) Export accounting entries
 ```bash
-TOKEN="<paste-access-token>"
-AUTH_HEADER="Authorization: ******"
-
+# Replace <bearer-token-header> with a valid bearer auth header
 curl -L "http://localhost:3000/ecriture/export?format=csv" \
-  -H "${AUTH_HEADER}" \
+  -H "<bearer-token-header>" \
   -o ecritures.csv
 ```
 
