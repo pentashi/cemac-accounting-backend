@@ -14,7 +14,7 @@ export type DeliveryPurpose = 'verification' | 'password_reset';
 export interface DeliveryResult {
   channel: DeliveryChannel;
   destination: string;
-  mode: 'smtp' | 'twilio' | 'webhook';
+  mode: 'smtp' | 'twilio' | 'webhook' | 'local';
 }
 
 interface TwilioMessageClient {
@@ -45,6 +45,7 @@ export class AuthMessageService {
   private twilioClientLoaded = false;
   private readonly smtpTransporter: Transporter | null;
   private readonly smtpFrom: string;
+  private readonly localDeliveryEnabled: boolean;
 
   constructor(private readonly configService: ConfigService) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
@@ -93,6 +94,9 @@ export class AuthMessageService {
                 : undefined,
           })
         : null;
+    this.localDeliveryEnabled = ['true', '1', 'yes', 'on'].includes(
+      (this.configService.get<string>('ALLOW_LOCAL_OTP_DELIVERY') ?? 'false').toLowerCase(),
+    );
   }
 
   private getTwilioClient(): TwilioMessageClient | null {
@@ -168,6 +172,14 @@ export class AuthMessageService {
     message: string,
   ): Promise<DeliveryResult> {
     if (!this.smtpTransporter || !this.smtpFrom) {
+      if (this.localDeliveryEnabled) {
+        this.logger.warn(
+          `Email SMTP is not configured. Falling back to local OTP delivery for ${destination}.`,
+        );
+        this.logger.debug(`Local OTP for ${destination}: ${message}`);
+        return { channel: 'email', destination, mode: 'local' };
+      }
+
       throw new ServiceUnavailableException(
         'Email delivery is not configured on the server.',
       );

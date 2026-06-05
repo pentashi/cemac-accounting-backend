@@ -182,13 +182,26 @@ export class AuthService {
       mode: delivery.mode,
     });
 
-    return {
+    const response: {
+      message: string;
+      canal: DeliveryChannel;
+      destination: string;
+      expiresInSeconds: number;
+      deliveryMode: string;
+      code?: string;
+    } = {
       message: purpose === 'verification' ? 'Code de vérification envoyé.' : 'Code de réinitialisation envoyé.',
       canal: payload.canal,
       destination: this.maskDestination(destination),
       expiresInSeconds: this.otpExpirySeconds,
       deliveryMode: delivery.mode,
     };
+
+    if (delivery.mode === 'local') {
+      response.code = code;
+    }
+
+    return response;
   }
 
   async envoyerCodeVerification(payload: CodeRequestPayload) {
