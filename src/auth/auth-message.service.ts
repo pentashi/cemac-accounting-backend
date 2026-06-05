@@ -194,9 +194,18 @@ export class AuthMessageService {
       });
       return { channel: 'email', destination, mode: 'smtp' };
     } catch (err) {
+      const errorMessage = (err as Error).message;
       this.logger.error(
-        `SMTP delivery failed for ${destination}: ${(err as Error).message}`,
+        `SMTP delivery failed for ${destination}: ${errorMessage}`,
       );
+      if (this.localDeliveryEnabled) {
+        this.logger.warn(
+          `SMTP delivery failed, falling back to local OTP delivery for ${destination}.`,
+        );
+        this.logger.debug(`Local OTP for ${destination}: ${message}`);
+        return { channel: 'email', destination, mode: 'local' };
+      }
+
       throw new BadGatewayException(
         'SMTP delivery failed. Check mail server configuration and credentials.',
       );

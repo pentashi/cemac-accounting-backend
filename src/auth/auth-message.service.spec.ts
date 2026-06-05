@@ -104,7 +104,29 @@ describe('AuthMessageService', () => {
     expect(mockSendMail).not.toHaveBeenCalled();
   });
 
-  it('throws when SMTP send fails', async () => {
+  it('falls back to local OTP delivery when SMTP send fails and local delivery is enabled', async () => {
+    mockSendMail.mockRejectedValueOnce(new Error('smtp error'));
+
+    const service = createService({
+      MAIL_HOST: 'smtp.example.com',
+      MAIL_PORT: '587',
+      MAIL_USERNAME: 'mailer',
+      MAIL_PASSWORD: 'secret',
+      ALLOW_LOCAL_OTP_DELIVERY: 'true',
+    });
+
+    const result = await service.sendCode(
+      'email',
+      'user@example.com',
+      '000000',
+      'verification',
+    );
+
+    expect(result.mode).toBe('local');
+    expect(result.channel).toBe('email');
+  });
+
+  it('throws when SMTP send fails and local delivery is disabled', async () => {
     mockSendMail.mockRejectedValueOnce(new Error('smtp error'));
 
     const service = createService({
