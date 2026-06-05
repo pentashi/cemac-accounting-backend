@@ -6,6 +6,7 @@ import type { NextFunction, Request, Response } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   const logger = new Logger('HTTP');
 
   app.use((req: Request, res: Response, next: NextFunction) => {
