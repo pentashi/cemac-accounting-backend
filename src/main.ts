@@ -6,6 +6,25 @@ import type { NextFunction, Request, Response } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Allow all origins (development only)
+  app.enableCors({
+    origin: true,
+    methods: [
+      'GET',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'OPTIONS',
+    ],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+    ],
+    credentials: true,
+  });
+
   const logger = new Logger('HTTP');
 
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -35,9 +54,11 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
 }
+
 void bootstrap();
