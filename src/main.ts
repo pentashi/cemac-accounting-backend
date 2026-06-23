@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -6,7 +6,6 @@ import type { NextFunction, Request, Response } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
   const logger = new Logger('HTTP');
 
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -21,6 +20,12 @@ async function bootstrap() {
 
     next();
   });
+
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: false,
+    transform: true,
+  }));
 
   const config = new DocumentBuilder()
     .setTitle('CEMAC Accounting API')
