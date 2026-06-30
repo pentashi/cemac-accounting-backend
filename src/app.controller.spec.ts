@@ -19,4 +19,10 @@ describe('AppController', () => {
       expect(appController.getHello()).toBe('cemac accounting app running!');
     });
   });
+
+  describe('health', () => {
+    it('should return an ok health payload', () => {
+      expect(appController.getHealth()).toEqual({ status: 'ok' });
+    });
+  });
 });
