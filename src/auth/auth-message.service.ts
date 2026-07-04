@@ -253,6 +253,13 @@ export class AuthMessageService {
     const providerUrl = this.configService.get<string>(envKey);
 
     if (!providerUrl) {
+      if (this.localDeliveryEnabled) {
+        this.logger.warn(
+          `Message delivery provider is not configured. Falling back to local OTP delivery for ${destination}.`,
+        );
+        return { channel, destination, mode: 'local' };
+      }
+
       throw new ServiceUnavailableException(
         'Message delivery provider is not configured on the server.',
       );

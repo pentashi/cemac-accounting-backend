@@ -153,6 +153,20 @@ describe('AuthMessageService', () => {
     );
   });
 
+  it('falls back to local OTP delivery for SMS when no provider is configured and local delivery is enabled', async () => {
+    const service = createService({ ALLOW_LOCAL_OTP_DELIVERY: 'true' });
+
+    const result = await service.sendCode(
+      'sms',
+      '+237600000000',
+      '888888',
+      'verification',
+    );
+
+    expect(result.mode).toBe('local');
+    expect(result.channel).toBe('sms');
+  });
+
   it('sends SMS codes with the Twilio SDK', async () => {
     const service = createService({
       TWILIO_ACCOUNT_SID: '[REDACTED]',
