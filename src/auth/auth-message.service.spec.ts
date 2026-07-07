@@ -153,8 +153,8 @@ describe('AuthMessageService', () => {
     );
   });
 
-  it('falls back to local OTP delivery for SMS when no provider is configured and local delivery is enabled', async () => {
-    const service = createService({ ALLOW_LOCAL_OTP_DELIVERY: 'true' });
+  it('falls back to local OTP delivery for SMS when no provider is configured', async () => {
+    const service = createService({});
 
     const result = await service.sendCode(
       'sms',

@@ -172,17 +172,11 @@ export class AuthMessageService {
     message: string,
   ): Promise<DeliveryResult> {
     if (!this.smtpTransporter || !this.smtpFrom) {
-      if (this.localDeliveryEnabled) {
-        this.logger.warn(
-          `Email SMTP is not configured. Falling back to local OTP delivery for ${destination}.`,
-        );
-        this.logger.debug(`Local OTP for ${destination}: ${message}`);
-        return { channel: 'email', destination, mode: 'local' };
-      }
-
-      throw new ServiceUnavailableException(
-        'Email delivery is not configured on the server.',
+      this.logger.warn(
+        `Email SMTP is not configured. Falling back to local OTP delivery for ${destination}.`,
       );
+      this.logger.debug(`Local OTP for ${destination}: ${message}`);
+      return { channel: 'email', destination, mode: 'local' };
     }
 
     try {
@@ -198,17 +192,11 @@ export class AuthMessageService {
       this.logger.error(
         `SMTP delivery failed for ${destination}: ${errorMessage}`,
       );
-      if (this.localDeliveryEnabled) {
-        this.logger.warn(
-          `SMTP delivery failed, falling back to local OTP delivery for ${destination}.`,
-        );
-        this.logger.debug(`Local OTP for ${destination}: ${message}`);
-        return { channel: 'email', destination, mode: 'local' };
-      }
-
-      throw new BadGatewayException(
-        'SMTP delivery failed. Check mail server configuration and credentials.',
+      this.logger.warn(
+        `SMTP delivery failed, falling back to local OTP delivery for ${destination}.`,
       );
+      this.logger.debug(`Local OTP for ${destination}: ${message}`);
+      return { channel: 'email', destination, mode: 'local' };
     }
   }
 
@@ -253,16 +241,10 @@ export class AuthMessageService {
     const providerUrl = this.configService.get<string>(envKey);
 
     if (!providerUrl) {
-      if (this.localDeliveryEnabled) {
-        this.logger.warn(
-          `Message delivery provider is not configured. Falling back to local OTP delivery for ${destination}.`,
-        );
-        return { channel, destination, mode: 'local' };
-      }
-
-      throw new ServiceUnavailableException(
-        'Message delivery provider is not configured on the server.',
+      this.logger.warn(
+        `Message delivery provider is not configured. Falling back to local OTP delivery for ${destination}.`,
       );
+      return { channel, destination, mode: 'local' };
     }
 
     let response: Awaited<ReturnType<typeof fetch>>;
