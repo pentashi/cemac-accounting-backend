@@ -13,15 +13,6 @@ It centralizes invoice lifecycle management, partner management, accounting entr
 The project exists to give accounting teams and product teams a backend that is compliant-oriented, extensible, and observable in production.
 It is for engineering teams building finance platforms for CEMAC markets.
 
-## Key Features
-- Enforces JWT auth plus role-based access control for admin/user permissions.
-- Supports full invoice lifecycle: calculate, create, update status, register payments, and export.
-- Manages clients and suppliers with CSV import and PDF/Excel/CSV export.
-- Produces accounting statements (balance, balance sheet, income statement) and date/account/type filtering.
-- Captures audit trails for login, registration, exports, and reporting actions.
-- Delivers OTP verification and password reset codes through SMTP, Twilio, or webhook providers.
-- Exposes OpenAPI/Swagger docs for faster integration and API validation.
-
 ## Architecture Overview
 ```text
 Clients (Web/Mobile/Admin)
@@ -39,6 +30,35 @@ Clients (Web/Mobile/Admin)
         +--> Redis (OTP/rate-limit store; in-memory fallback when Redis host is not set)
         +--> SMTP / Twilio / Webhook providers (message delivery)
 ```
+
+### Tech Stack
+- **Framework**: NestJS with TypeScript
+- **Database**: PostgreSQL with TypeORM
+- **Cache**: Redis (with in-memory fallback)
+- **Authentication**: JWT with role-based access control (RBAC)
+- **API Documentation**: Swagger/OpenAPI
+- **Testing**: Jest with e2e and unit tests
+- **CI/CD**: GitHub Actions
+- **Message Delivery**: SMTP, Twilio, Webhook providers
+
+## Key Engineering Decisions
+- **JWT + RBAC**: Token-based authentication with role-based authorization for secure access control
+- **Audit Logging**: Comprehensive audit trail for compliance and security monitoring
+- **OTP Security**: Encrypted one-time passwords with Redis-based rate limiting
+- **Rate Limiting**: Redis-backed request throttling to prevent abuse
+- **Swagger/OpenAPI**: Interactive API documentation for easier integration and testing
+- **PostgreSQL**: Robust relational database with ACID compliance for financial data
+- **Automated Testing**: Jest-based unit and e2e tests for reliability
+- **CI/CD Pipeline**: GitHub Actions for automated testing and builds
+
+## Key Features
+- Enforces JWT auth plus role-based access control for admin/user permissions.
+- Supports full invoice lifecycle: calculate, create, update status, register payments, and export.
+- Manages clients and suppliers with CSV import and PDF/Excel/CSV export.
+- Produces accounting statements (balance, balance sheet, income statement) and date/account/type filtering.
+- Captures audit trails for login, registration, exports, and reporting actions.
+- Delivers OTP verification and password reset codes through SMTP, Twilio, or webhook providers.
+- Exposes OpenAPI/Swagger docs for faster integration and API validation.
 
 ## Prerequisites
 - Node.js 18+
